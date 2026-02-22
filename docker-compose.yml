@@ -14,14 +14,14 @@ services:
       context: ./backend
       dockerfile: Dockerfile.dev
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
     ports:
       - "4000:4000"
     volumes:
       - ./backend:/app
 
-  db:
+  postgres:
     image: postgres:18.2
     environment:
       POSTGRES_USER: postgres
@@ -31,5 +31,3 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    ports:
-      - "5432:5432"
