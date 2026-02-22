@@ -4,13 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Structure
 
-Monorepo with `frontend/` and `backend/` directories, orchestrated via Docker Compose.
+Monorepo with `frontend/` and `backend/` directories, orchestrated via Docker Compose. A `justfile` provides task runner shortcuts.
 
 ## Commands
 
 - **Start all services:** `docker compose up` (from project root)
 - **Rebuild after dependency changes:** `docker compose up --build`
-- **Frontend only (without Docker):** `cd frontend && npm run dev`
+- **Shell into a container:** `just shell` (defaults to backend) or `just shell <service>`
+- **Run a command in a container:** `just run <service> <cmd>` (e.g. `just run backend mix test`)
 
 ### Frontend commands (run from `frontend/`)
 
@@ -32,10 +33,16 @@ React 19 + Vite 7 + TypeScript + Tailwind CSS v4 app using Lexical as a rich-tex
 
 **Custom Lexical node (`src/App/section.ts`):** `SectionNode` extends `ElementNode` to represent document sections with a `heading` property. Renders as a `<section>` element with a left border. Exports `$createSectionNode`, `$isSectionNode` helpers, and the `SerializedSectionNode` type. Custom serialized node types use the `Spread<CustomFields, SerializedElementNode>` pattern from Lexical.
 
+### Backend (`backend/`)
+
+Elixir/Phoenix app. Uses `Dockerfile.dev` for local development. Runs on port 4000. Waits for Postgres to be healthy before starting.
+
 ### Docker
 
-- `docker-compose.yml` at project root defines the services
-- Frontend runs Vite dev server on port 5173 with HMR via volume mount
+- `docker-compose.yml` defines three services: `frontend`, `backend`, `postgres`
+- Frontend: Vite dev server on port 5173 with HMR via volume mount
+- Backend: Phoenix dev server on port 4000 via volume mount, depends on `postgres` health
+- Postgres 18.2 with user/password `postgres`/`postgres`
 
 ## ESLint
 
