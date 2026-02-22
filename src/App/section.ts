@@ -41,9 +41,7 @@ export class SectionNode extends ElementNode {
 
   createDOM(): HTMLElement {
     const el = document.createElement('section');
-    el.style.borderLeft = '3px solid #ccc';
-    el.style.paddingLeft = '1rem';
-    el.style.marginBottom = '1.5rem';
+    el.className = 'border-l-3 border-gray-300 pl-4 mb-6';
     return el;
   }
 
