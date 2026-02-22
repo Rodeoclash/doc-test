@@ -71,7 +71,7 @@ const loadContent = async (): Promise<string> => {
 };
 
 function onChange(editorState: EditorState): void {
-  console.log(JSON.stringify(editorState.toJSON()))
+  // console.log(JSON.stringify(editorState.toJSON()))
 }
 
 const initialEditorState: string = await loadContent();
