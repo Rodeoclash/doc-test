@@ -1,7 +1,7 @@
 import './App.css'
 
-import { $getRoot, $getSelection } from 'lexical';
-import { useEffect } from 'react';
+import type { EditorState } from 'lexical';
+import type { InitialConfigType } from '@lexical/react/LexicalComposer';
 
 import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
@@ -10,6 +10,7 @@ import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
+import { SectionNode } from './App/section';
 
 const theme = {
   // Theme styling goes here
@@ -19,11 +20,11 @@ const theme = {
 // Catch any errors that occur during Lexical updates and log them
 // or throw them as needed. If you don't throw them, Lexical will
 // try to recover gracefully without losing user data.
-function onError(error) {
+function onError(error: Error): void {
   console.error(error);
 }
 
-const loadContent = async () => {
+const loadContent = async (): Promise<string> => {
   const state = {
     "root": {
       "children": [
@@ -69,16 +70,17 @@ const loadContent = async () => {
   return JSON.stringify(state);
 };
 
-function onChange(editorState) {
+function onChange(editorState: EditorState): void {
   console.log(JSON.stringify(editorState.toJSON()))
 }
 
-const initialEditorState = await loadContent();
+const initialEditorState: string = await loadContent();
 
 function Editor() {
-  const initialConfig = {
+  const initialConfig: InitialConfigType = {
     editorState: initialEditorState,
     namespace: 'MyEditor',
+    nodes: [SectionNode],
     theme,
     onError,
   };
