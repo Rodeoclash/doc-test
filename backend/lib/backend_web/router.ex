@@ -18,6 +18,8 @@ defmodule BackendWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+
+    live "/organisations/:organisation_id/documents/:id", DocumentLive.Show
   end
 
   # Other scopes may use custom stacks.
