@@ -6,6 +6,7 @@ defmodule Backend.Organisations.Organisation do
     field :name, :string
 
     has_many :section_tags, Backend.Organisations.SectionTag
+    has_many :documents, Backend.Organisations.Document
 
     timestamps(type: :utc_datetime)
   end

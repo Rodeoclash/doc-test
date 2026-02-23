@@ -11,7 +11,7 @@
 # and so on) as they will fail if something goes wrong.
 
 alias Backend.Repo
-alias Backend.Organisations.{Organisation, SectionTag}
+alias Backend.Organisations.{Organisation, SectionTag, Document}
 
 org = Repo.insert!(%Organisation{name: "SuperAPI"})
 
@@ -30,5 +30,11 @@ Repo.insert!(%SectionTag{
 Repo.insert!(%SectionTag{
   name: "6 Planning",
   description: "Actions to address risks and opportunities, information security risk assessment and risk treatment, and information security objectives and planning to achieve them.",
+  organisation_id: org.id
+})
+
+Repo.insert!(%Document{
+  name: "ISMS Plan",
+  content: %{},
   organisation_id: org.id
 })
