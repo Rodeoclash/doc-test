@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Structure
 
-Monorepo with `frontend/` and `backend/` directories, orchestrated via Docker Compose. A `justfile` provides task runner shortcuts.
+Phoenix app in `backend/` with a React/Lexical editor built via esbuild, orchestrated via Docker Compose. A `justfile` provides task runner shortcuts.
 
 ## Commands
 
@@ -12,38 +12,32 @@ Monorepo with `frontend/` and `backend/` directories, orchestrated via Docker Co
 - **Rebuild after dependency changes:** `docker compose up --build`
 - **Shell into a container:** `just shell` (defaults to backend) or `just shell <service>`
 - **Run a command in a container:** `just run <service> <cmd>` (e.g. `just run backend mix test`)
-
-### Frontend commands (run from `frontend/`)
-
-- **Dev server:** `npm run dev`
-- **Build:** `npm run build` (type-checks with tsc, then bundles with Vite)
-- **Lint:** `npm run lint` (ESLint with typescript-eslint, react-hooks, and react-refresh plugins)
-- **Type-check:** `npm run type-check` (runs `tsc --noEmit`)
-- **Preview production build:** `npm run preview`
+- **Install editor npm deps:** `just run backend npm install --prefix assets`
 
 ## Architecture
 
-### Frontend (`frontend/`)
-
-React 19 + Vite 7 + TypeScript + Tailwind CSS v4 app using Lexical as a rich-text editor framework. Tailwind is integrated via `@tailwindcss/vite` plugin (no `tailwind.config.js` or PostCSS config — v4 uses CSS-first configuration via `@import "tailwindcss"` in `src/index.css`).
-
-**Entry point:** `src/main.tsx` renders `<App />` (exported from `src/App.tsx`) into `#root`.
-
-**Editor (`src/App.tsx`):** Sets up a Lexical editor via `LexicalComposer` with RichTextPlugin, HistoryPlugin, AutoFocusPlugin, and OnChangePlugin. Editor state is initialized from a hardcoded JSON structure via `loadContent()`. Changes are logged to console via `onChange`.
-
-**Custom Lexical node (`src/App/section.ts`):** `SectionNode` extends `ElementNode` to represent document sections with a `heading` property. Renders as a `<section>` element with a left border. Exports `$createSectionNode`, `$isSectionNode` helpers, and the `SerializedSectionNode` type. Custom serialized node types use the `Spread<CustomFields, SerializedElementNode>` pattern from Lexical.
-
 ### Backend (`backend/`)
 
-Elixir/Phoenix app. Uses `Dockerfile.dev` for local development. Runs on port 4000. Waits for Postgres to be healthy before starting.
+Elixir/Phoenix app with LiveView. Uses `Dockerfile.dev` for local development (includes Node.js 22 for npm). Runs on port 4000. Waits for Postgres to be healthy before starting.
+
+**Lexical Editor (`backend/assets/js/editor/`):** React 19 + TypeScript components built by a dedicated esbuild profile (`editor`). Outputs to `priv/static/assets/js/index.js`.
+
+- `Editor.tsx` — Lexical editor with RichTextPlugin, HistoryPlugin, AutoFocusPlugin, OnChangePlugin. Registers the custom `SectionNode`.
+- `section.ts` — `SectionNode` extends `ElementNode` for document sections with a `heading` property. Uses Tailwind classes for styling. Exports `$createSectionNode`, `$isSectionNode`, and `SerializedSectionNode` type.
+- `index.tsx` — Entry point. Exports `mount(el)` and `unmount()` functions for use by LiveView hooks.
+
+**LiveView Hook (`backend/assets/js/hooks/editor_hook.ts`):** Mounts/unmounts the React editor. Registered in `app.js` as `EditorHook`. Use in any template:
+
+```heex
+<div id="lexical-editor" phx-hook="EditorHook"></div>
+```
+
+**esbuild:** Two profiles configured in `config/config.exs` — `backend` (Phoenix/LiveView JS) and `editor` (React/Lexical TSX). Both run as watchers in dev.
+
+**npm deps:** Managed via `backend/assets/package.json`. React, Lexical, and type definitions installed in `backend/assets/node_modules/`.
 
 ### Docker
 
-- `docker-compose.yml` defines three services: `frontend`, `backend`, `postgres`
-- Frontend: Vite dev server on port 5173 with HMR via volume mount
+- `docker-compose.yml` defines two services: `backend`, `postgres`
 - Backend: Phoenix dev server on port 4000 via volume mount, depends on `postgres` health
 - Postgres 18.2 with user/password `postgres`/`postgres`
-
-## ESLint
-
-Uses `typescript-eslint` for TypeScript-aware linting. The `@typescript-eslint/no-unused-vars` rule ignores variables starting with an uppercase letter or underscore (`varsIgnorePattern: '^[A-Z_]'`).

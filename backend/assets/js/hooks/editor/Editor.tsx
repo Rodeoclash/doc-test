@@ -1,5 +1,3 @@
-import './App.css'
-
 import type { EditorState } from 'lexical';
 import type { InitialConfigType } from '@lexical/react/LexicalComposer';
 
@@ -10,21 +8,18 @@ import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
-import { SectionNode } from './App/section';
+import { SectionNode } from './section';
 
 const theme = {
   // Theme styling goes here
   //...
 }
 
-// Catch any errors that occur during Lexical updates and log them
-// or throw them as needed. If you don't throw them, Lexical will
-// try to recover gracefully without losing user data.
 function onError(error: Error): void {
   console.error(error);
 }
 
-const loadContent = async (): Promise<string> => {
+function loadContent(): string {
   const state = {
     "root": {
       "children": [
@@ -68,17 +63,15 @@ const loadContent = async (): Promise<string> => {
     }
   };
   return JSON.stringify(state);
-};
+}
 
 function onChange(editorState: EditorState): void {
   // console.log(JSON.stringify(editorState.toJSON()))
 }
 
-const initialEditorState: string = await loadContent();
-
-function Editor() {
+export default function Editor() {
   const initialConfig: InitialConfigType = {
-    editorState: initialEditorState,
+    editorState: loadContent(),
     namespace: 'MyEditor',
     nodes: [SectionNode],
     theme,
@@ -102,5 +95,3 @@ function Editor() {
     </LexicalComposer>
   );
 }
-
-export default Editor
