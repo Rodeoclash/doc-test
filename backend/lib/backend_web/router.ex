@@ -19,7 +19,11 @@ defmodule BackendWeb.Router do
 
     get "/", PageController, :home
 
-    live "/organisations/:organisation_id/documents/:id", DocumentLive.Show
+    live_session :organisation,
+      on_mount: {BackendWeb.OrganisationHooks, :default},
+      layout: {BackendWeb.Layouts, :organisation} do
+      live "/organisations/:organisation_id/documents/:id", DocumentLive.Show
+    end
   end
 
   # Other scopes may use custom stacks.
