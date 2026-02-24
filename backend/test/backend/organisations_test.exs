@@ -3,11 +3,11 @@ defmodule Backend.OrganisationsTest do
 
   alias Backend.Organisations
 
-  import Backend.OrganisationsFixtures
+  import Backend.Factory
 
   describe "get/1" do
     test "returns the organisation for a valid id" do
-      organisation = organisation_fixture()
+      organisation = insert(:organisation)
       assert Organisations.get(organisation.id) == organisation
     end
 
