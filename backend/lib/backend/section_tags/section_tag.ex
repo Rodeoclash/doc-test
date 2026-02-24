@@ -1,4 +1,4 @@
-defmodule Backend.Organisations.SectionTag do
+defmodule Backend.SectionTags.SectionTag do
   use Ecto.Schema
   import Ecto.Changeset
 

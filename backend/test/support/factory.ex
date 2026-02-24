@@ -1,7 +1,9 @@
 defmodule Backend.Factory do
   use ExMachina.Ecto, repo: Backend.Repo
 
-  alias Backend.Organisations.{Organisation, SectionTag, Document}
+  alias Backend.Organisations.Organisation
+  alias Backend.SectionTags.SectionTag
+  alias Backend.Documents.Document
 
   def organisation_factory do
     %Organisation{

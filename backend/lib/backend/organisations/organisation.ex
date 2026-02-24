@@ -5,8 +5,8 @@ defmodule Backend.Organisations.Organisation do
   schema "organisations" do
     field :name, :string
 
-    has_many :section_tags, Backend.Organisations.SectionTag
-    has_many :documents, Backend.Organisations.Document
+    has_many :section_tags, Backend.SectionTags.SectionTag
+    has_many :documents, Backend.Documents.Document
 
     timestamps(type: :utc_datetime)
   end

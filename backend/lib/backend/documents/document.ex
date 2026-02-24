@@ -1,4 +1,4 @@
-defmodule Backend.Organisations.Document do
+defmodule Backend.Documents.Document do
   use Ecto.Schema
   import Ecto.Changeset
 
