@@ -8,9 +8,9 @@ import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
-import { SectionNode } from './section';
-import { ChangeDeleteNode } from './change_delete';
-import { ChangeInsertNode } from './change_insert';
+import { SectionNode } from './nodes/section';
+import { ChangeDeleteNode } from './nodes/change_delete';
+import { ChangeInsertNode } from './nodes/change_insert';
 
 const theme = {
   // Theme styling goes here
