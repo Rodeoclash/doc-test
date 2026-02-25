@@ -9,6 +9,8 @@ import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { SectionNode } from './section';
+import { ChangeDeleteNode } from './change_delete';
+import { ChangeInsertNode } from './change_insert';
 
 const theme = {
   // Theme styling goes here
@@ -48,7 +50,85 @@ function loadContent(): string {
                   "format": 0,
                   "mode": "normal",
                   "style": "",
-                  "text": "SuperAPI is the primary operating company..."
+                  "text": "SuperAPI is the "
+                },
+                {
+                  "type": "change-delete",
+                  "version": 1,
+                  "changeId": "change-1",
+                  "direction": null,
+                  "format": "",
+                  "indent": 0,
+                  "children": [
+                    {
+                      "type": "text",
+                      "version": 1,
+                      "detail": 0,
+                      "format": 0,
+                      "mode": "normal",
+                      "style": "",
+                      "text": "primary"
+                    }
+                  ]
+                },
+                {
+                  "type": "change-insert",
+                  "version": 1,
+                  "changeId": "change-1",
+                  "direction": null,
+                  "format": "",
+                  "indent": 0,
+                  "children": [
+                    {
+                      "type": "text",
+                      "version": 1,
+                      "detail": 0,
+                      "format": 0,
+                      "mode": "normal",
+                      "style": "",
+                      "text": "main"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "version": 1,
+                  "detail": 0,
+                  "format": 0,
+                  "mode": "normal",
+                  "style": "",
+                  "text": " operating company..."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "version": 1,
+          "sectionRef": "4.2",
+          "heading": "The next section",
+          "direction": null,
+          "format": "",
+          "indent": 0,
+          "children": [
+            {
+              "type": "paragraph",
+              "version": 1,
+              "direction": null,
+              "format": "",
+              "indent": 0,
+              "textFormat": 0,
+              "textStyle": "",
+              "children": [
+                {
+                  "type": "text",
+                  "version": 1,
+                  "detail": 0,
+                  "format": 0,
+                  "mode": "normal",
+                  "style": "",
+                  "text": "Some other content here"
                 }
               ]
             }
@@ -73,7 +153,7 @@ export default function Editor() {
   const initialConfig: InitialConfigType = {
     editorState: loadContent(),
     namespace: 'MyEditor',
-    nodes: [SectionNode],
+    nodes: [SectionNode, ChangeDeleteNode, ChangeInsertNode],
     theme,
     onError,
   };
