@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
   $getSelection,
@@ -14,6 +15,8 @@ import { computePosition, flip, shift, offset, autoUpdate } from '@floating-ui/d
 
 type ChangeNode = ChangeDeleteNode | ChangeInsertNode;
 
+// Walk up from a node to find the nearest change node ancestor.
+// Returns null if the node isn't inside a tracked change.
 function $findChangeNode(node: LexicalNode | null): ChangeNode | null {
   let current: LexicalNode | null = node;
   while (current) {
@@ -25,6 +28,8 @@ function $findChangeNode(node: LexicalNode | null): ChangeNode | null {
   return null;
 }
 
+// Find the paired delete/insert nodes for a given changeId by walking the tree.
+// A tracked change always has a delete and insert node sharing the same changeId.
 function $findChangeNodesById(changeId: string): {
   deleteNode: ChangeDeleteNode | null;
   insertNode: ChangeInsertNode | null;
@@ -50,6 +55,9 @@ function $findChangeNodesById(changeId: string): {
   return { deleteNode, insertNode };
 }
 
+// Move a change node's children into its parent, then remove the now-empty wrapper.
+// e.g. <paragraph> <change-insert> "main" </change-insert> </paragraph>
+//   -> <paragraph> "main" </paragraph>
 function $unwrapChangeNode(node: ElementNode): void {
   const children = node.getChildren();
   for (const child of children) {
@@ -58,60 +66,75 @@ function $unwrapChangeNode(node: ElementNode): void {
   node.remove();
 }
 
-export function ChangePopoverPlugin(): null {
+export function ChangePopoverPlugin() {
   const [editor] = useLexicalComposerContext();
-  const popoverRef = useRef<HTMLDivElement | null>(null);
-  const cleanupRef = useRef<(() => void) | null>(null);
-  const activeChangeIdRef = useRef<string | null>(null);
+  const [activeChangeId, setActiveChangeId] = useState<string | null>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const referenceElRef = useRef<HTMLElement | null>(null);
 
+  // On every editor update, check if the cursor is inside a change node.
+  // If so, store its changeId and DOM element for popover positioning.
   useEffect(() => {
-    const popover = document.createElement('div');
-    popover.className =
-      'fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 p-1 flex gap-1';
-    popover.style.display = 'none';
-    document.body.appendChild(popover);
-    popoverRef.current = popover;
+    return editor.registerUpdateListener(({ editorState }) => {
+      editorState.read(() => {
+        const selection = $getSelection();
+        if (!$isRangeSelection(selection)) {
+          setActiveChangeId(null);
+          return;
+        }
 
-    const acceptBtn = document.createElement('button');
-    acceptBtn.className =
-      'px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-800 rounded cursor-pointer';
-    acceptBtn.textContent = 'Accept';
-    popover.appendChild(acceptBtn);
+        const anchorNode = selection.anchor.getNode();
+        const changeNode = $findChangeNode(anchorNode);
 
-    const rejectBtn = document.createElement('button');
-    rejectBtn.className =
-      'px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-800 rounded cursor-pointer';
-    rejectBtn.textContent = 'Reject';
-    popover.appendChild(rejectBtn);
+        if (!changeNode) {
+          setActiveChangeId(null);
+          return;
+        }
 
-    function hidePopover(): void {
-      popover.style.display = 'none';
-      cleanupRef.current?.();
-      cleanupRef.current = null;
-      activeChangeIdRef.current = null;
-    }
+        // Get the actual DOM element so Floating UI can anchor the popover to it
+        const domElement = editor.getElementByKey(changeNode.getKey());
+        
+        if (!domElement) {
+          setActiveChangeId(null);
+          return;
+        }
 
-    function showPopover(referenceEl: HTMLElement): void {
-      cleanupRef.current?.();
-      popover.style.display = 'flex';
-
-      cleanupRef.current = autoUpdate(referenceEl, popover, () => {
-        computePosition(referenceEl, popover, {
-          placement: 'bottom-start',
-          middleware: [offset(4), flip(), shift({ padding: 8 })],
-        }).then(({ x, y }) => {
-          popover.style.left = `${x}px`;
-          popover.style.top = `${y}px`;
-        });
+        referenceElRef.current = domElement;
+        setActiveChangeId(changeNode.__changeId);
       });
-    }
+    });
+  }, [editor]);
 
-    function resolveChange(keepType: 'insert' | 'delete'): void {
-      const changeId = activeChangeIdRef.current;
-      if (!changeId) return;
+  // Position the popover beneath the change node's DOM element.
+  // autoUpdate keeps it anchored on scroll/resize and returns its own cleanup.
+  // Starts hidden to avoid a flash at (0,0) before computePosition resolves.
+  useEffect(() => {
+    const referenceEl = referenceElRef.current;
+    const popoverEl = popoverRef.current;
+    if (!activeChangeId || !referenceEl || !popoverEl) return;
+
+    popoverEl.style.visibility = 'hidden';
+
+    return autoUpdate(referenceEl, popoverEl, () => {
+      computePosition(referenceEl, popoverEl, {
+        placement: 'bottom',
+        middleware: [offset(4), flip(), shift({ padding: 8 })],
+      }).then(({ x, y }) => {
+        popoverEl.style.left = `${x}px`;
+        popoverEl.style.top = `${y}px`;
+        popoverEl.style.visibility = 'visible';
+      });
+    });
+  }, [activeChangeId]);
+
+  // Accept: unwrap the insert node's children into the paragraph, remove the delete node.
+  // Reject: unwrap the delete node's children into the paragraph, remove the insert node.
+  const resolveChange = useCallback(
+    (keepType: 'insert' | 'delete') => {
+      if (!activeChangeId) return;
 
       editor.update(() => {
-        const { deleteNode, insertNode } = $findChangeNodesById(changeId);
+        const { deleteNode, insertNode } = $findChangeNodesById(activeChangeId);
 
         if (keepType === 'insert') {
           if (insertNode) $unwrapChangeNode(insertNode);
@@ -122,45 +145,33 @@ export function ChangePopoverPlugin(): null {
         }
       });
 
-      hidePopover();
-    }
+      setActiveChangeId(null);
+    },
+    [editor, activeChangeId],
+  );
 
-    acceptBtn.addEventListener('click', () => resolveChange('insert'));
-    rejectBtn.addEventListener('click', () => resolveChange('delete'));
+  // No active change = no popover. Portal renders into document.body
+  // so it floats above the editor without affecting its layout.
+  if (!activeChangeId) return null;
 
-    const removeUpdateListener = editor.registerUpdateListener(({ editorState }) => {
-      editorState.read(() => {
-        const selection = $getSelection();
-        if (!$isRangeSelection(selection)) {
-          hidePopover();
-          return;
-        }
-
-        const anchorNode = selection.anchor.getNode();
-        const changeNode = $findChangeNode(anchorNode);
-
-        if (!changeNode) {
-          hidePopover();
-          return;
-        }
-
-        activeChangeIdRef.current = changeNode.__changeId;
-        const domElement = editor.getElementByKey(changeNode.getKey());
-        if (!domElement) {
-          hidePopover();
-          return;
-        }
-
-        showPopover(domElement);
-      });
-    });
-
-    return () => {
-      removeUpdateListener();
-      cleanupRef.current?.();
-      popover.remove();
-    };
-  }, [editor]);
-
-  return null;
+  return createPortal(
+    <div
+      ref={popoverRef}
+      className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 p-1 flex gap-1"
+    >
+      <button
+        className="px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-800 rounded cursor-pointer"
+        onClick={() => resolveChange('insert')}
+      >
+        Accept
+      </button>
+      <button
+        className="px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-800 rounded cursor-pointer"
+        onClick={() => resolveChange('delete')}
+      >
+        Reject
+      </button>
+    </div>,
+    document.body,
+  );
 }
