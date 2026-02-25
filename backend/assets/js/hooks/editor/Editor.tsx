@@ -11,6 +11,7 @@ import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { SectionNode } from './nodes/section';
 import { ChangeDeleteNode } from './nodes/change_delete';
 import { ChangeInsertNode } from './nodes/change_insert';
+import { ChangePopoverPlugin } from './plugins/ChangePopoverPlugin';
 
 const theme = {
   // Theme styling goes here
@@ -172,6 +173,7 @@ export default function Editor() {
       <HistoryPlugin />
       <AutoFocusPlugin />
       <OnChangePlugin onChange={onChange} />
+      <ChangePopoverPlugin />
     </LexicalComposer>
   );
 }
