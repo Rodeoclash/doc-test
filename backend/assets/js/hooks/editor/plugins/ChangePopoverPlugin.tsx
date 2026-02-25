@@ -11,7 +11,15 @@ import {
 } from 'lexical';
 import { $isChangeDeleteNode, type ChangeDeleteNode } from '../nodes/change_delete';
 import { $isChangeInsertNode, type ChangeInsertNode } from '../nodes/change_insert';
-import { computePosition, flip, shift, offset, autoUpdate } from '@floating-ui/dom';
+import {
+  computePosition,
+  flip,
+  shift,
+  offset,
+  arrow,
+  autoUpdate,
+  type VirtualElement,
+} from '@floating-ui/dom';
 
 type ChangeNode = ChangeDeleteNode | ChangeInsertNode;
 
@@ -70,10 +78,13 @@ export function ChangePopoverPlugin() {
   const [editor] = useLexicalComposerContext();
   const [activeChangeId, setActiveChangeId] = useState<string | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
-  const referenceElRef = useRef<HTMLElement | null>(null);
+  const arrowRef = useRef<HTMLDivElement>(null);
+  const referenceRef = useRef<VirtualElement | null>(null);
 
   // On every editor update, check if the cursor is inside a change node.
-  // If so, store its changeId and DOM element for popover positioning.
+  // If so, find both the delete and insert nodes for that changeId and build
+  // a virtual reference element spanning both so the popover centres on the
+  // full change rather than whichever node the cursor happens to be in.
   useEffect(() => {
     return editor.registerUpdateListener(({ editorState }) => {
       editorState.read(() => {
@@ -91,38 +102,78 @@ export function ChangePopoverPlugin() {
           return;
         }
 
-        // Get the actual DOM element so Floating UI can anchor the popover to it
-        const domElement = editor.getElementByKey(changeNode.getKey());
-        
-        if (!domElement) {
+        const changeId = changeNode.__changeId;
+        const { deleteNode, insertNode } = $findChangeNodesById(changeId);
+
+        // Collect DOM elements for both sides of the change
+        const elements = [deleteNode, insertNode]
+          .map((n) => (n ? editor.getElementByKey(n.getKey()) : null))
+          .filter((el): el is HTMLElement => el != null);
+
+        if (elements.length === 0) {
           setActiveChangeId(null);
           return;
         }
 
-        referenceElRef.current = domElement;
-        setActiveChangeId(changeNode.__changeId);
+        // Virtual element whose bounding rect spans both change nodes
+        referenceRef.current = {
+          getBoundingClientRect() {
+            const rects = elements.map((el) => el.getBoundingClientRect());
+            const top = Math.min(...rects.map((r) => r.top));
+            const left = Math.min(...rects.map((r) => r.left));
+            const bottom = Math.max(...rects.map((r) => r.bottom));
+            const right = Math.max(...rects.map((r) => r.right));
+            return new DOMRect(left, top, right - left, bottom - top);
+          },
+        };
+
+        setActiveChangeId(changeId);
       });
     });
   }, [editor]);
 
-  // Position the popover beneath the change node's DOM element.
+  // Position the popover beneath the virtual reference spanning both change nodes.
   // autoUpdate keeps it anchored on scroll/resize and returns its own cleanup.
   // Starts hidden to avoid a flash at (0,0) before computePosition resolves.
   useEffect(() => {
-    const referenceEl = referenceElRef.current;
+    const reference = referenceRef.current;
     const popoverEl = popoverRef.current;
-    if (!activeChangeId || !referenceEl || !popoverEl) return;
+    const arrowEl = arrowRef.current;
+    if (!activeChangeId || !reference || !popoverEl || !arrowEl) return;
 
     popoverEl.style.visibility = 'hidden';
 
-    return autoUpdate(referenceEl, popoverEl, () => {
-      computePosition(referenceEl, popoverEl, {
+    return autoUpdate(reference, popoverEl, () => {
+      computePosition(reference, popoverEl, {
         placement: 'bottom',
-        middleware: [offset(4), flip(), shift({ padding: 8 })],
-      }).then(({ x, y }) => {
+        middleware: [
+          offset(8),
+          flip(),
+          shift({ padding: 8 }),
+          arrow({ element: arrowEl }),
+        ],
+      }).then(({ x, y, placement, middlewareData }) => {
         popoverEl.style.left = `${x}px`;
         popoverEl.style.top = `${y}px`;
         popoverEl.style.visibility = 'visible';
+
+        // Position the arrow on the edge facing the reference.
+        // placement may flip (e.g. bottom → top), so we derive which
+        // edge the arrow sits on from the actual resolved placement.
+        const side = placement.split('-')[0] as 'top' | 'bottom';
+        const staticSide = side === 'bottom' ? 'top' : 'bottom';
+        const arrowRotation = side === 'bottom' ? 'rotate(45deg)' : 'rotate(225deg)';
+        const arrowData = middlewareData.arrow;
+
+        if (arrowData) {
+          Object.assign(arrowEl.style, {
+            left: arrowData.x != null ? `${arrowData.x}px` : '',
+            top: '',
+            bottom: '',
+            [staticSide]: '-4px',
+            transform: arrowRotation,
+          });
+        }
       });
     });
   }, [activeChangeId]);
@@ -159,6 +210,10 @@ export function ChangePopoverPlugin() {
       ref={popoverRef}
       className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 p-1 flex gap-1"
     >
+      <div
+        ref={arrowRef}
+        className="absolute w-2 h-2 bg-white border-l border-t border-gray-200"
+      />
       <button
         className="px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-800 rounded cursor-pointer"
         onClick={() => resolveChange('insert')}
