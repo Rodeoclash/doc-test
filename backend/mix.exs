@@ -63,7 +63,8 @@ defmodule Backend.MixProject do
       {:swoosh, "~> 1.16"},
       {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
       {:telemetry_metrics, "~> 1.0"},
-      {:telemetry_poller, "~> 1.0"}
+      {:telemetry_poller, "~> 1.0"},
+      {:y_ex, "~> 0.10.2"}
     ]
   end
 
