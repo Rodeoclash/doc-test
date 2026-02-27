@@ -8,7 +8,6 @@ import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
-import { SectionNode } from './nodes/section';
 import { ChangeDeleteNode } from './nodes/change_delete';
 import { ChangeInsertNode } from './nodes/change_insert';
 import { ChangePopoverPlugin } from './plugins/ChangePopoverPlugin';
@@ -27,22 +26,30 @@ function loadContent(): string {
     "root": {
       "children": [
         {
-          "type": "section",
+          "type": "paragraph",
           "version": 1,
-          "sectionRef": "4.1",
-          "heading": "Understanding the Organisation and Its Context",
           "direction": null,
           "format": "",
           "indent": 0,
+          "textFormat": 0,
+          "textStyle": "",
           "children": [
             {
-              "type": "paragraph",
+              "type": "text",
               "version": 1,
+              "detail": 0,
+              "format": 0,
+              "mode": "normal",
+              "style": "",
+              "text": "SuperAPI is the "
+            },
+            {
+              "type": "change-delete",
+              "version": 1,
+              "changeId": "change-1",
               "direction": null,
               "format": "",
               "indent": 0,
-              "textFormat": 0,
-              "textStyle": "",
               "children": [
                 {
                   "type": "text",
@@ -51,46 +58,18 @@ function loadContent(): string {
                   "format": 0,
                   "mode": "normal",
                   "style": "",
-                  "text": "SuperAPI is the "
-                },
-                {
-                  "type": "change-delete",
-                  "version": 1,
-                  "changeId": "change-1",
-                  "direction": null,
-                  "format": "",
-                  "indent": 0,
-                  "children": [
-                    {
-                      "type": "text",
-                      "version": 1,
-                      "detail": 0,
-                      "format": 0,
-                      "mode": "normal",
-                      "style": "",
-                      "text": "primary"
-                    }
-                  ]
-                },
-                {
-                  "type": "change-insert",
-                  "version": 1,
-                  "changeId": "change-1",
-                  "direction": null,
-                  "format": "",
-                  "indent": 0,
-                  "children": [
-                    {
-                      "type": "text",
-                      "version": 1,
-                      "detail": 0,
-                      "format": 0,
-                      "mode": "normal",
-                      "style": "",
-                      "text": "main"
-                    }
-                  ]
-                },
+                  "text": "primary"
+                }
+              ]
+            },
+            {
+              "type": "change-insert",
+              "version": 1,
+              "changeId": "change-1",
+              "direction": null,
+              "format": "",
+              "indent": 0,
+              "children": [
                 {
                   "type": "text",
                   "version": 1,
@@ -98,40 +77,38 @@ function loadContent(): string {
                   "format": 0,
                   "mode": "normal",
                   "style": "",
-                  "text": " operating company..."
+                  "text": "main"
                 }
               ]
+            },
+            {
+              "type": "text",
+              "version": 1,
+              "detail": 0,
+              "format": 0,
+              "mode": "normal",
+              "style": "",
+              "text": " operating company..."
             }
           ]
         },
         {
-          "type": "section",
+          "type": "paragraph",
           "version": 1,
-          "sectionRef": "4.2",
-          "heading": "The next section",
           "direction": null,
           "format": "",
           "indent": 0,
+          "textFormat": 0,
+          "textStyle": "",
           "children": [
             {
-              "type": "paragraph",
+              "type": "text",
               "version": 1,
-              "direction": null,
-              "format": "",
-              "indent": 0,
-              "textFormat": 0,
-              "textStyle": "",
-              "children": [
-                {
-                  "type": "text",
-                  "version": 1,
-                  "detail": 0,
-                  "format": 0,
-                  "mode": "normal",
-                  "style": "",
-                  "text": "Some other content here"
-                }
-              ]
+              "detail": 0,
+              "format": 0,
+              "mode": "normal",
+              "style": "",
+              "text": "Some other content here"
             }
           ]
         }
@@ -154,7 +131,7 @@ export default function Editor() {
   const initialConfig: InitialConfigType = {
     editorState: loadContent(),
     namespace: 'MyEditor',
-    nodes: [SectionNode, ChangeDeleteNode, ChangeInsertNode],
+    nodes: [ChangeDeleteNode, ChangeInsertNode],
     theme,
     onError,
   };
