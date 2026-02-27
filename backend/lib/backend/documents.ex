@@ -8,4 +8,14 @@ defmodule Backend.Documents do
   """
   @spec get(integer()) :: Document.t() | nil
   def get(id), do: Repo.get(Document, id)
+
+  @doc """
+  Persists the Yjs binary state for a document.
+  """
+  def update_yjs_state(document_id, yjs_state) do
+    Document
+    |> Repo.get!(document_id)
+    |> Ecto.Changeset.change(%{yjs_state: yjs_state})
+    |> Repo.update!()
+  end
 end
