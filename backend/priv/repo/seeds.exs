@@ -14,12 +14,13 @@ alias Backend.Documents.Document
 alias Backend.Organisations.Organisation
 alias Backend.Repo
 
-now = DateTime.utc_now() |> DateTime.truncate(:second)
+now = DateTime.truncate(DateTime.utc_now(), :second)
 timestamps = %{inserted_at: now, updated_at: now}
 
 organisation =
-  Repo.insert!(
-    %Organisation{id: 1, name: "SuperAPI"} |> Map.merge(timestamps),
+  %Organisation{id: 1, name: "SuperAPI"}
+  |> Map.merge(timestamps)
+  |> Repo.insert!(
     on_conflict: :replace_all,
     conflict_target: :id
   )
@@ -125,9 +126,9 @@ _lexical_content = %{
   }
 }
 
-Repo.insert!(
-  %Document{id: 1, name: "ISMS Plan", organisation_id: organisation.id}
-  |> Map.merge(timestamps),
+%Document{id: 1, name: "ISMS Plan", organisation_id: organisation.id}
+|> Map.merge(timestamps)
+|> Repo.insert!(
   on_conflict: :replace_all,
   conflict_target: :id
 )
