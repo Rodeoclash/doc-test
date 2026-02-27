@@ -24,7 +24,9 @@ organisation =
     conflict_target: :id
   )
 
-document_content = %{
+# Initial Lexical editor state — kept for reference. Once the Yjs integration is
+# complete, the editor state will be derived from yjs_state instead.
+_lexical_content = %{
   "root" => %{
     "children" => [
       %{
@@ -124,7 +126,7 @@ document_content = %{
 }
 
 Repo.insert!(
-  %Document{id: 1, name: "ISMS Plan", content: document_content, organisation_id: organisation.id}
+  %Document{id: 1, name: "ISMS Plan", organisation_id: organisation.id}
   |> Map.merge(timestamps),
   on_conflict: :replace_all,
   conflict_target: :id

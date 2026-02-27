@@ -13,7 +13,6 @@ defmodule Backend.Factory do
   def document_factory do
     %Document{
       name: sequence(:name, &"Document #{&1}"),
-      content: %{},
       organisation: build(:organisation)
     }
   end

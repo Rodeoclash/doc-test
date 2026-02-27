@@ -6,7 +6,7 @@ defmodule Backend.Documents.Document do
 
   schema "documents" do
     field :name, :string
-    field :content, :map
+    field :yjs_state, :binary
 
     belongs_to :organisation, Backend.Organisations.Organisation
 
@@ -16,7 +16,7 @@ defmodule Backend.Documents.Document do
   @doc false
   def changeset(document, attrs) do
     document
-    |> cast(attrs, [:name, :content])
+    |> cast(attrs, [:name, :yjs_state])
     |> validate_required([:name])
   end
 end
