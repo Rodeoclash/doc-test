@@ -56,6 +56,7 @@ defmodule Backend.MixProject do
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 1.1.0"},
       {:phoenix, "~> 1.8.3"},
+      {:phoenix_typed_hook, "~> 0.18.2"},
       {:postgrex, ">= 0.0.0"},
       {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
       {:bandit, "~> 1.5"},
