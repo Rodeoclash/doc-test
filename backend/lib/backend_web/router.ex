@@ -22,6 +22,14 @@ defmodule BackendWeb.Router do
     live_session :organisation,
       on_mount: {BackendWeb.OrganisationHooks, :default},
       layout: {BackendWeb.Layouts, :organisation} do
+    end
+
+    live_session :document,
+      on_mount: [
+        {BackendWeb.OrganisationHooks, :default},
+        {BackendWeb.DocumentHooks, :default}
+      ],
+      layout: {BackendWeb.Layouts, :organisation} do
       live "/organisations/:organisation_id/documents/:id", DocumentLive.Show
     end
   end
