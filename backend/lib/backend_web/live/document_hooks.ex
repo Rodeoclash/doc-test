@@ -1,5 +1,7 @@
 defmodule BackendWeb.DocumentHooks do
+  @moduledoc false
   import Phoenix.Component
+
   alias Backend.Documents
 
   def on_mount(:default, %{"id" => id}, _session, socket) do

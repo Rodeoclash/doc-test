@@ -1,4 +1,5 @@
 defmodule BackendWeb.OrganisationHooks do
+  @moduledoc false
   import Phoenix.Component
 
   alias Backend.Organisations

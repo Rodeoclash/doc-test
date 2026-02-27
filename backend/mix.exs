@@ -47,12 +47,7 @@ defmodule Backend.MixProject do
       {:ex_machina, "~> 2.8.0", only: :test},
       {:gettext, "~> 1.0"},
       {:heroicons,
-       github: "tailwindlabs/heroicons",
-       tag: "v2.2.0",
-       sparse: "optimized",
-       app: false,
-       compile: false,
-       depth: 1},
+       github: "tailwindlabs/heroicons", tag: "v2.2.0", sparse: "optimized", app: false, compile: false, depth: 1},
       {:jason, "~> 1.2"},
       {:lazy_html, ">= 0.1.0", only: :test},
       {:phoenix_ecto, "~> 4.5"},
@@ -68,7 +63,7 @@ defmodule Backend.MixProject do
       {:swoosh, "~> 1.16"},
       {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
       {:telemetry_metrics, "~> 1.0"},
-      {:telemetry_poller, "~> 1.0"},
+      {:telemetry_poller, "~> 1.0"}
     ]
   end
 

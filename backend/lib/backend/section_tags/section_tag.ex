@@ -1,5 +1,7 @@
 defmodule Backend.SectionTags.SectionTag do
+  @moduledoc false
   use Ecto.Schema
+
   import Ecto.Changeset
 
   schema "section_tags" do

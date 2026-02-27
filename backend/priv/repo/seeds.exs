@@ -10,10 +10,10 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 
-alias Backend.Repo
-alias Backend.Organisations.Organisation
-alias Backend.SectionTags.SectionTag
 alias Backend.Documents.Document
+alias Backend.Organisations.Organisation
+alias Backend.Repo
+alias Backend.SectionTags.SectionTag
 
 organisation = Repo.insert!(%Organisation{name: "SuperAPI"})
 

@@ -1,9 +1,10 @@
 defmodule Backend.Factory do
+  @moduledoc false
   use ExMachina.Ecto, repo: Backend.Repo
 
+  alias Backend.Documents.Document
   alias Backend.Organisations.Organisation
   alias Backend.SectionTags.SectionTag
-  alias Backend.Documents.Document
 
   def organisation_factory do
     %Organisation{

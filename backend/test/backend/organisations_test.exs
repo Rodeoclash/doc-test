@@ -1,9 +1,9 @@
 defmodule Backend.OrganisationsTest do
   use Backend.DataCase
 
-  alias Backend.Organisations
-
   import Backend.Factory
+
+  alias Backend.Organisations
 
   describe "get/1" do
     test "returns the organisation for a valid id" do

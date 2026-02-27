@@ -19,15 +19,14 @@ defmodule BackendWeb.ConnCase do
 
   using do
     quote do
+      use BackendWeb, :verified_routes
+      import BackendWeb.ConnCase
+      import Phoenix.ConnTest
+      import Plug.Conn
       # The default endpoint for testing
       @endpoint BackendWeb.Endpoint
 
-      use BackendWeb, :verified_routes
-
       # Import conveniences for testing with connections
-      import Plug.Conn
-      import Phoenix.ConnTest
-      import BackendWeb.ConnCase
     end
   end
 

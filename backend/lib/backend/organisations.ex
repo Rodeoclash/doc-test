@@ -1,6 +1,7 @@
 defmodule Backend.Organisations do
-  alias Backend.Repo
+  @moduledoc false
   alias Backend.Organisations.Organisation
+  alias Backend.Repo
 
   @doc """
   Gets a single organisation by id. Returns nil if not found.

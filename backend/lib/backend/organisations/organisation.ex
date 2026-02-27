@@ -1,5 +1,7 @@
 defmodule Backend.Organisations.Organisation do
+  @moduledoc false
   use Ecto.Schema
+
   import Ecto.Changeset
 
   schema "organisations" do

@@ -1,4 +1,5 @@
 defmodule BackendWeb.DocumentLive.Show do
+  @moduledoc false
   use BackendWeb, :live_view
 
   @impl true

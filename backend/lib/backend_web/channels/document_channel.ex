@@ -1,5 +1,7 @@
 defmodule BackendWeb.DocumentChannel do
+  @moduledoc false
   use Phoenix.Channel
+
   require Logger
 
   @impl true

@@ -1,5 +1,7 @@
 defmodule Backend.Documents.Document do
+  @moduledoc false
   use Ecto.Schema
+
   import Ecto.Changeset
 
   schema "documents" do
