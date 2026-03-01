@@ -46,9 +46,12 @@ defmodule Backend.Documents.DocServer do
     else
       Logger.info("DocServer started for document #{document_id}")
 
-      # Apply persisted Yjs state if it exists
+      # Apply persisted Yjs state if it exists.
+      # Use :restore origin so handle_update_v1 skips persist/broadcast.
       if document.yjs_state do
-        Yex.apply_update(state.doc, document.yjs_state)
+        Yex.Doc.transaction(state.doc, :restore, fn ->
+          Yex.apply_update(state.doc, document.yjs_state)
+        end)
       end
 
       {:ok, Map.merge(state, %{document_id: document_id, topic: "document:#{document_id}"})}
@@ -56,6 +59,11 @@ defmodule Backend.Documents.DocServer do
   end
 
   @impl true
+  def handle_update_v1(_doc, _update, :restore, state) do
+    # Skip persist/broadcast when restoring state from DB during init
+    {:noreply, state}
+  end
+
   def handle_update_v1(_doc, update, origin, state) do
     # Persist the full document state to the database
     {:ok, encoded} = Yex.encode_state_as_update(state.doc)
