@@ -12,9 +12,8 @@ defmodule Backend.Application do
       Backend.Repo,
       {DNSCluster, query: Application.get_env(:backend, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Backend.PubSub},
-      # Start a worker by calling: Backend.Worker.start_link(arg)
-      # {Backend.Worker, arg},
-      # Start to serve requests, typically the last entry
+      {Registry, keys: :unique, name: Backend.DocRegistry},
+      {DynamicSupervisor, name: Backend.DocSupervisor, strategy: :one_for_one},
       BackendWeb.Endpoint
     ]
 
