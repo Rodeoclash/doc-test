@@ -62,7 +62,8 @@ defmodule Backend.Documents.DocServer do
     Documents.update_yjs_state(state.document_id, encoded)
 
     # Broadcast the incremental update to other clients
-    message = Yex.Sync.message_encode(Yex.Sync.get_update(update))
+    {:ok, sync_update} = Yex.Sync.get_update(update)
+    {:ok, message} = Yex.Sync.message_encode({:sync, sync_update})
 
     BackendWeb.Endpoint.broadcast_from(
       origin,
