@@ -10,6 +10,7 @@ defmodule Backend.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
+      test_coverage: [tool: ExCoveralls],
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
       listeners: [Phoenix.CodeReloader]
     ]
@@ -27,7 +28,13 @@ defmodule Backend.MixProject do
 
   def cli do
     [
-      preferred_envs: [precommit: :test]
+      preferred_envs: [
+        precommit: :test,
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.html": :test,
+        "coveralls.json": :test
+      ]
     ]
   end
 
@@ -45,6 +52,7 @@ defmodule Backend.MixProject do
       {:bandit, "~> 1.5"},
       {:dns_cluster, "~> 0.2.0"},
       {:ex_machina, "~> 2.8.0", only: :test},
+      {:excoveralls, "~> 0.18", only: :test},
       {:gettext, "~> 1.0"},
       {:heroicons,
        github: "tailwindlabs/heroicons", tag: "v2.2.0", sparse: "optimized", app: false, compile: false, depth: 1},
