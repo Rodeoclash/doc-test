@@ -81,11 +81,10 @@ defmodule Backend.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["compile", "tailwind backend", "esbuild backend", "esbuild editor"],
+      "assets.build": ["compile", "tailwind backend", "esbuild backend"],
       "assets.deploy": [
         "tailwind backend --minify",
         "esbuild backend --minify",
-        "esbuild editor --minify",
         "phx.digest"
       ],
       precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]
