@@ -1,135 +1,36 @@
-import type { EditorState } from 'lexical';
 import type { InitialConfigType } from '@lexical/react/LexicalComposer';
+import type { Channel } from 'phoenix';
 
-import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
-import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
-import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
+import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
+import { CollaborationPlugin } from '@lexical/react/LexicalCollaborationPlugin';
+import { LexicalCollaboration } from '@lexical/react/LexicalCollaborationContext';
+import * as Y from 'yjs';
 import { ChangeDeleteNode } from './nodes/change_delete';
 import { ChangeInsertNode } from './nodes/change_insert';
 import { ChangePopoverPlugin } from './plugins/ChangePopoverPlugin';
+import { PhoenixChannelProvider } from '../../user_socket/PhoenixChannelProvider';
 
 const theme = {
   // Theme styling goes here
-  //...
-}
+};
 
 function onError(error: Error): void {
   console.error(error);
 }
 
-function loadContent(): string {
-  const state = {
-    "root": {
-      "children": [
-        {
-          "type": "paragraph",
-          "version": 1,
-          "direction": null,
-          "format": "",
-          "indent": 0,
-          "textFormat": 0,
-          "textStyle": "",
-          "children": [
-            {
-              "type": "text",
-              "version": 1,
-              "detail": 0,
-              "format": 0,
-              "mode": "normal",
-              "style": "",
-              "text": "SuperAPI is the "
-            },
-            {
-              "type": "change-delete",
-              "version": 1,
-              "changeId": "change-1",
-              "direction": null,
-              "format": "",
-              "indent": 0,
-              "children": [
-                {
-                  "type": "text",
-                  "version": 1,
-                  "detail": 0,
-                  "format": 0,
-                  "mode": "normal",
-                  "style": "",
-                  "text": "primary"
-                }
-              ]
-            },
-            {
-              "type": "change-insert",
-              "version": 1,
-              "changeId": "change-1",
-              "direction": null,
-              "format": "",
-              "indent": 0,
-              "children": [
-                {
-                  "type": "text",
-                  "version": 1,
-                  "detail": 0,
-                  "format": 0,
-                  "mode": "normal",
-                  "style": "",
-                  "text": "main"
-                }
-              ]
-            },
-            {
-              "type": "text",
-              "version": 1,
-              "detail": 0,
-              "format": 0,
-              "mode": "normal",
-              "style": "",
-              "text": " operating company..."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "version": 1,
-          "direction": null,
-          "format": "",
-          "indent": 0,
-          "textFormat": 0,
-          "textStyle": "",
-          "children": [
-            {
-              "type": "text",
-              "version": 1,
-              "detail": 0,
-              "format": 0,
-              "mode": "normal",
-              "style": "",
-              "text": "Some other content here"
-            }
-          ]
-        }
-      ],
-      "direction": null,
-      "format": "",
-      "indent": 0,
-      "type": "root",
-      "version": 1
-    }
-  };
-  return JSON.stringify(state);
-}
+type EditorProps = {
+  channel: Channel;
+  documentId: string;
+};
 
-function onChange(editorState: EditorState): void {
-  // console.log(JSON.stringify(editorState.toJSON()))
-}
-
-export default function Editor() {
+export default function Editor({ channel, documentId }: EditorProps) {
   const initialConfig: InitialConfigType = {
-    editorState: loadContent(),
+    // No editorState — CollaborationPlugin manages state via Yjs
+    editorState: null,
     namespace: 'MyEditor',
     nodes: [ChangeDeleteNode, ChangeInsertNode],
     theme,
@@ -138,19 +39,30 @@ export default function Editor() {
 
   return (
     <LexicalComposer initialConfig={initialConfig}>
-      <RichTextPlugin
-        contentEditable={
-          <ContentEditable
-            aria-placeholder={'Enter some text...'}
-            placeholder={<div>Enter some text...</div>}
-          />
-        }
-        ErrorBoundary={LexicalErrorBoundary}
-      />
-      <HistoryPlugin />
-      <AutoFocusPlugin />
-      <OnChangePlugin onChange={onChange} />
-      <ChangePopoverPlugin />
+      <LexicalCollaboration>
+        <RichTextPlugin
+          contentEditable={
+            <ContentEditable
+              aria-placeholder={'Enter some text...'}
+              placeholder={<div>Enter some text...</div>}
+            />
+          }
+          ErrorBoundary={LexicalErrorBoundary}
+        />
+        <CollaborationPlugin
+          id={documentId}
+          providerFactory={(id, yjsDocMap) => {
+            const doc = new Y.Doc();
+            yjsDocMap.set(id, doc);
+            return new PhoenixChannelProvider(channel, doc);
+          }}
+          shouldBootstrap={false}
+          username="User"
+          cursorColor="#0ea5e9"
+        />
+        <AutoFocusPlugin />
+        <ChangePopoverPlugin />
+      </LexicalCollaboration>
     </LexicalComposer>
   );
 }
