@@ -8,7 +8,8 @@ defmodule Backend.Documents.DocServerTest do
 
   setup do
     # Stop all DocServer processes between tests
-    DynamicSupervisor.which_children(Backend.DocSupervisor)
+    Backend.DocSupervisor
+    |> DynamicSupervisor.which_children()
     |> Enum.each(fn {_, pid, _, _} -> DynamicSupervisor.terminate_child(Backend.DocSupervisor, pid) end)
 
     :ok
@@ -96,7 +97,7 @@ defmodule Backend.Documents.DocServerTest do
 
       # Verify the state was persisted
       updated_doc = Documents.get(document.id)
-      assert updated_doc.yjs_state != nil
+      assert updated_doc.yjs_state
 
       # Verify the persisted state contains the text
       verify_doc = Yex.Doc.new()
