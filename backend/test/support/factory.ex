@@ -4,6 +4,7 @@ defmodule Backend.Factory do
 
   alias Backend.Documents.Document
   alias Backend.Organisations.Organisation
+
   def organisation_factory do
     %Organisation{
       name: sequence(:name, &"Organisation #{&1}")

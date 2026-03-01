@@ -20,6 +20,7 @@ defmodule BackendWeb.ConnCase do
   using do
     quote do
       use BackendWeb, :verified_routes
+
       import BackendWeb.ConnCase
       import Phoenix.ConnTest
       import Plug.Conn
