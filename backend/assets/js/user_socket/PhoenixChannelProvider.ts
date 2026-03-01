@@ -6,10 +6,11 @@ import * as syncProtocol from 'y-protocols/sync';
 import * as encoding from 'lib0/encoding';
 import * as decoding from 'lib0/decoding';
 
-// Outer message type bytes (matches Yex.Sync protocol)
+// Outer message type bytes matching yrs::sync::protocol constants
 const MESSAGE_SYNC = 0;
-const MESSAGE_QUERY_AWARENESS = 1;
-const MESSAGE_AWARENESS = 2;
+const MESSAGE_AWARENESS = 1;
+const MESSAGE_AUTH = 2;
+const MESSAGE_QUERY_AWARENESS = 3;
 
 type EventType = 'sync' | 'status' | 'update' | 'reload';
 type EventCallback = (...args: any[]) => void;
@@ -19,7 +20,7 @@ type EventCallback = (...args: any[]) => void;
  *
  * The DocServer (Yex.DocServer) speaks the standard Yjs sync protocol
  * wrapped with an outer message type byte:
- *   byte 0: message type (0=sync, 1=query_awareness, 2=awareness)
+ *   byte 0: message type (0=sync, 1=awareness, 2=auth, 3=query_awareness)
  *   bytes 1+: protocol-specific payload
  *
  * Messages are base64-encoded for transport over the channel's "yjs" event.
