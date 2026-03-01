@@ -8,6 +8,8 @@ defmodule BackendWeb.DocumentChannel do
 
   @impl true
   def join("document:" <> document_id, _params, socket) do
+    document_id = String.to_integer(document_id)
+
     case DocServer.find_or_start(document_id) do
       {:ok, doc_server} ->
         Logger.info("DocumentChannel joined for document #{document_id}")
