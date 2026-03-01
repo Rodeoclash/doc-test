@@ -36,15 +36,15 @@ config :esbuild,
   version: "0.25.4",
   backend: [
     args:
-      ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.),
+      ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=. --loader:.tsx=tsx --loader:.ts=ts --jsx=automatic),
     cd: Path.expand("../assets", __DIR__),
-    env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
-  ],
-  editor: [
-    args:
-      ~w(js/editor/index.tsx --bundle --target=es2022 --outdir=../priv/static/assets/js --loader:.tsx=tsx --loader:.ts=ts --jsx=automatic),
-    cd: Path.expand("../assets", __DIR__),
-    env: %{"NODE_PATH" => [Path.expand("../assets/node_modules", __DIR__)]}
+    env: %{
+      "NODE_PATH" => [
+        Path.expand("../deps", __DIR__),
+        Mix.Project.build_path(),
+        Path.expand("../assets/node_modules", __DIR__)
+      ]
+    }
   ]
 
 # Configure Elixir's Logger

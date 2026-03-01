@@ -27,7 +27,6 @@ config :backend, BackendWeb.Endpoint,
   secret_key_base: "+UE4NbuAN935S9GPd1YplgSz2Z6eQ2NlxpkMUJrjCo4tZBk4xZJ6nedlAiagQmlf",
   watchers: [
     esbuild: {Esbuild, :install_and_run, [:backend, ~w(--sourcemap=inline --watch)]},
-    esbuild: {Esbuild, :install_and_run, [:editor, ~w(--sourcemap=inline --watch)]},
     tailwind: {Tailwind, :install_and_run, [:backend, ~w(--watch)]}
   ]
 
