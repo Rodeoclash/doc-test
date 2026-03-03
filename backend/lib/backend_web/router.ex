@@ -5,9 +5,16 @@ defmodule BackendWeb.Router do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
-    plug :put_root_layout, html: {BackendWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+  end
+
+  pipeline :public do
+    plug :put_root_layout, html: {BackendWeb.Layouts, :root_public}
+  end
+
+  pipeline :private do
+    plug :put_root_layout, html: {BackendWeb.Layouts, :root_private}
   end
 
   pipeline :api do
@@ -15,9 +22,12 @@ defmodule BackendWeb.Router do
   end
 
   scope "/", BackendWeb do
-    pipe_through :browser
-
+    pipe_through [:browser, :public]
     get "/", PageController, :home
+  end
+
+  scope "/", BackendWeb do
+    pipe_through [:browser, :private]
 
     live_session :organisation,
       on_mount: {BackendWeb.OrganisationHooks, :default},
