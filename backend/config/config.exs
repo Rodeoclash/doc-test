@@ -27,6 +27,19 @@ config :backend, BackendWeb.Endpoint,
   pubsub_server: Backend.PubSub,
   live_view: [signing_salt: "pOe3rQpq"]
 
+config :backend, :scopes,
+  user: [
+    default: true,
+    module: Backend.Accounts.Scope,
+    assign_key: :current_scope,
+    access_path: [:user, :id],
+    schema_key: :user_id,
+    schema_type: :id,
+    schema_table: :users,
+    test_data_fixture: Backend.AccountsFixtures,
+    test_setup_helper: :register_and_log_in_user
+  ]
+
 config :backend,
   ecto_repos: [Backend.Repo],
   generators: [timestamp_type: :utc_datetime]

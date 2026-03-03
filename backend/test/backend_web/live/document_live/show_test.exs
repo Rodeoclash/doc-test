@@ -4,6 +4,8 @@ defmodule BackendWeb.DocumentLive.ShowTest do
   import Backend.Factory
   import Phoenix.LiveViewTest
 
+  setup :register_and_log_in_user
+
   describe "Show" do
     test "renders the editor for a valid document", %{conn: conn} do
       organisation = insert(:organisation)

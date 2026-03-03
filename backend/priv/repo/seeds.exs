@@ -10,6 +10,7 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 
+alias Backend.Accounts
 alias Backend.Documents.Document
 alias Backend.Organisations.Organisation
 alias Backend.Repo
@@ -132,3 +133,9 @@ _lexical_content = %{
   on_conflict: :replace_all,
   conflict_target: :id
 )
+
+# Create a test user for development
+case Accounts.register_user(%{email: "test@example.com", password: "password1234"}) do
+  {:ok, _user} -> :ok
+  {:error, _changeset} -> :ok
+end

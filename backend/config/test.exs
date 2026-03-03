@@ -23,6 +23,9 @@ config :backend, BackendWeb.Endpoint,
   secret_key_base: "wPgt0ncI11aydmb2Eoc6TbP1XGFP5v/mOFsHDDC9gFLvqUF7xM/zFqrAdtHfciKM",
   server: false
 
+# Only in tests, remove the complexity from the password hashing algorithm
+config :bcrypt_elixir, :log_rounds, 1
+
 # Print only warnings and errors during test
 config :logger, level: :warning
 
