@@ -1,18 +1,17 @@
-import type { InitialConfigType } from '@lexical/react/LexicalComposer';
-import type { Channel } from 'phoenix';
-
-import { LexicalComposer } from '@lexical/react/LexicalComposer';
-import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
-import { ContentEditable } from '@lexical/react/LexicalContentEditable';
-import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
-import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
-import { CollaborationPlugin } from '@lexical/react/LexicalCollaborationPlugin';
-import { LexicalCollaboration } from '@lexical/react/LexicalCollaborationContext';
-import * as Y from 'yjs';
-import { ChangeDeleteNode } from './nodes/change_delete';
-import { ChangeInsertNode } from './nodes/change_insert';
-import { ChangePopoverPlugin } from './plugins/ChangePopoverPlugin';
-import { PhoenixChannelProvider } from '../../user_socket/PhoenixChannelProvider';
+import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
+import { LexicalCollaboration } from "@lexical/react/LexicalCollaborationContext";
+import { CollaborationPlugin } from "@lexical/react/LexicalCollaborationPlugin";
+import type { InitialConfigType } from "@lexical/react/LexicalComposer";
+import { LexicalComposer } from "@lexical/react/LexicalComposer";
+import { ContentEditable } from "@lexical/react/LexicalContentEditable";
+import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
+import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
+import type { Channel } from "phoenix";
+import * as Y from "yjs";
+import { PhoenixChannelProvider } from "../../user_socket/PhoenixChannelProvider";
+import { ChangeDeleteNode } from "./nodes/change_delete";
+import { ChangeInsertNode } from "./nodes/change_insert";
+import { ChangePopoverPlugin } from "./plugins/ChangePopoverPlugin";
 
 const theme = {
   // Theme styling goes here
@@ -31,7 +30,7 @@ export default function Editor({ channel, documentId }: EditorProps) {
   const initialConfig: InitialConfigType = {
     // No editorState — CollaborationPlugin manages state via Yjs
     editorState: null,
-    namespace: 'MyEditor',
+    namespace: "MyEditor",
     nodes: [ChangeDeleteNode, ChangeInsertNode],
     theme,
     onError,
@@ -43,7 +42,7 @@ export default function Editor({ channel, documentId }: EditorProps) {
         <RichTextPlugin
           contentEditable={
             <ContentEditable
-              aria-placeholder={'Enter some text...'}
+              aria-placeholder={"Enter some text..."}
               placeholder={<div>Enter some text...</div>}
             />
           }

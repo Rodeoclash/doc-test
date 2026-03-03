@@ -1,8 +1,8 @@
-import { Hook, makeHook } from 'phoenix_typed_hook';
-import { createRoot, type Root } from 'react-dom/client';
-import type { Channel } from 'phoenix';
-import Editor from './editor/Editor';
-import { createDocumentChannel } from '../user_socket/document_channel';
+import type { Channel } from "phoenix";
+import { Hook, makeHook } from "phoenix_typed_hook";
+import { createRoot, type Root } from "react-dom/client";
+import { createDocumentChannel } from "../user_socket/document_channel";
+import Editor from "./editor/Editor";
 
 class EditorHook extends Hook {
   root: Root | null = null;
@@ -11,7 +11,7 @@ class EditorHook extends Hook {
   mounted() {
     const documentId = this.el.dataset.documentId;
     if (!documentId) {
-      throw new Error('EditorHook: missing data-document-id');
+      throw new Error("EditorHook: missing data-document-id");
     }
 
     this.channel = createDocumentChannel(documentId);

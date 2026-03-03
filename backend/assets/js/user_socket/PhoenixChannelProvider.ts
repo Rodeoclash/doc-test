@@ -1,10 +1,15 @@
-import type { Channel } from 'phoenix';
-import type { Provider, ProviderAwareness } from '@lexical/yjs';
-import * as Y from 'yjs';
-import { Awareness, encodeAwarenessUpdate, applyAwarenessUpdate, removeAwarenessStates } from 'y-protocols/awareness';
-import * as syncProtocol from 'y-protocols/sync';
-import * as encoding from 'lib0/encoding';
-import * as decoding from 'lib0/decoding';
+import type { Provider, ProviderAwareness } from "@lexical/yjs";
+import * as decoding from "lib0/decoding";
+import * as encoding from "lib0/encoding";
+import type { Channel } from "phoenix";
+import {
+  Awareness,
+  applyAwarenessUpdate,
+  encodeAwarenessUpdate,
+  removeAwarenessStates,
+} from "y-protocols/awareness";
+import * as syncProtocol from "y-protocols/sync";
+import type * as Y from "yjs";
 
 // Outer message type bytes matching yrs::sync::protocol constants
 const MESSAGE_SYNC = 0;
@@ -12,7 +17,7 @@ const MESSAGE_AWARENESS = 1;
 const MESSAGE_AUTH = 2;
 const MESSAGE_QUERY_AWARENESS = 3;
 
-type EventType = 'sync' | 'status' | 'update' | 'reload';
+type EventType = "sync" | "status" | "update" | "reload";
 type EventCallback = (...args: any[]) => void;
 
 /**
@@ -45,46 +50,48 @@ export class PhoenixChannelProvider implements Provider {
       getLocalState: () => this._awareness.getLocalState(),
       getStates: () => this._awareness.getStates(),
       setLocalState: (state) => this._awareness.setLocalState(state),
-      setLocalStateField: (field, value) => this._awareness.setLocalStateField(field, value),
-      on: (_type: 'update', cb: () => void) => this._awareness.on('update', cb),
-      off: (_type: 'update', cb: () => void) => this._awareness.off('update', cb),
+      setLocalStateField: (field, value) =>
+        this._awareness.setLocalStateField(field, value),
+      on: (_type: "update", cb: () => void) => this._awareness.on("update", cb),
+      off: (_type: "update", cb: () => void) =>
+        this._awareness.off("update", cb),
     };
   }
 
   connect(): void {
     // Listen for incoming messages from the server
-    this.channelRef = this.channel.on('yjs', (payload: { data: string }) => {
+    this.channelRef = this.channel.on("yjs", (payload: { data: string }) => {
       this.handleServerMessage(payload.data);
     });
 
     // Forward local doc updates to the server
-    this.doc.on('update', this.handleDocUpdate);
+    this.doc.on("update", this.handleDocUpdate);
 
     // Forward local awareness changes to the server
-    this._awareness.on('update', this.handleAwarenessUpdate);
+    this._awareness.on("update", this.handleAwarenessUpdate);
 
     // Join the channel, then initiate sync handshake
     this.channel
       .join()
-      .receive('ok', () => {
-        this.emit('status', { status: 'connected' });
+      .receive("ok", () => {
+        this.emit("status", { status: "connected" });
         this.sendSyncStep1();
       })
-      .receive('error', (resp: unknown) => {
-        console.error('Failed to join document channel', resp);
-        this.emit('status', { status: 'disconnected' });
+      .receive("error", (resp: unknown) => {
+        console.error("Failed to join document channel", resp);
+        this.emit("status", { status: "disconnected" });
       });
   }
 
   disconnect(): void {
-    this.doc.off('update', this.handleDocUpdate);
-    this._awareness.off('update', this.handleAwarenessUpdate);
+    this.doc.off("update", this.handleDocUpdate);
+    this._awareness.off("update", this.handleAwarenessUpdate);
 
     // Clean up awareness state before leaving
-    removeAwarenessStates(this._awareness, [this.doc.clientID], 'disconnect');
+    removeAwarenessStates(this._awareness, [this.doc.clientID], "disconnect");
 
     if (this.channelRef !== null) {
-      this.channel.off('yjs', this.channelRef);
+      this.channel.off("yjs", this.channelRef);
       this.channelRef = null;
     }
 
@@ -121,7 +128,7 @@ export class PhoenixChannelProvider implements Provider {
   /** Encode a Uint8Array as base64 and push to the channel */
   private sendMessage(data: Uint8Array): void {
     const base64 = uint8ArrayToBase64(data);
-    this.channel.push('yjs', { data: base64 });
+    this.channel.push("yjs", { data: base64 });
   }
 
   /** Handle an incoming base64 message from the server */
@@ -135,7 +142,11 @@ export class PhoenixChannelProvider implements Provider {
         this.handleSyncMessage(decoder);
         break;
       case MESSAGE_AWARENESS:
-        applyAwarenessUpdate(this._awareness, decoding.readVarUint8Array(decoder), this);
+        applyAwarenessUpdate(
+          this._awareness,
+          decoding.readVarUint8Array(decoder),
+          this,
+        );
         break;
       case MESSAGE_QUERY_AWARENESS:
         this.sendAwarenessUpdate();
@@ -164,7 +175,7 @@ export class PhoenixChannelProvider implements Provider {
     // Mark as synced after receiving sync step 2 (the initial state)
     if (syncMessageType === syncProtocol.messageYjsSyncStep2 && !this.synced) {
       this.synced = true;
-      this.emit('sync', true);
+      this.emit("sync", true);
     }
   }
 
@@ -184,10 +195,14 @@ export class PhoenixChannelProvider implements Provider {
 
   /** Called when local awareness state changes, forwards to server */
   private handleAwarenessUpdate = (
-    { added, updated, removed }: { added: number[]; updated: number[]; removed: number[] },
+    {
+      added,
+      updated,
+      removed,
+    }: { added: number[]; updated: number[]; removed: number[] },
     origin: unknown,
   ): void => {
-    if (origin === 'local') {
+    if (origin === "local") {
       const changedClients = added.concat(updated).concat(removed);
       const encoder = encoding.createEncoder();
       encoding.writeVarUint(encoder, MESSAGE_AWARENESS);
@@ -215,7 +230,7 @@ export class PhoenixChannelProvider implements Provider {
 }
 
 function uint8ArrayToBase64(bytes: Uint8Array): string {
-  let binary = '';
+  let binary = "";
   for (let i = 0; i < bytes.byteLength; i++) {
     binary += String.fromCharCode(bytes[i]);
   }

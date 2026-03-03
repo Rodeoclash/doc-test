@@ -4,10 +4,10 @@ import {
   type NodeKey,
   type SerializedElementNode,
   type Spread,
-} from 'lexical';
+} from "lexical";
 
 export type SerializedChangeDeleteNode = Spread<
-  { type: 'change-delete'; changeId: string },
+  { type: "change-delete"; changeId: string },
   SerializedElementNode
 >;
 
@@ -15,7 +15,7 @@ export class ChangeDeleteNode extends ElementNode {
   __changeId: string;
 
   static getType(): string {
-    return 'change-delete';
+    return "change-delete";
   }
 
   static clone(node: ChangeDeleteNode): ChangeDeleteNode {
@@ -30,18 +30,20 @@ export class ChangeDeleteNode extends ElementNode {
   exportJSON(): SerializedChangeDeleteNode {
     return {
       ...super.exportJSON(),
-      type: 'change-delete',
+      type: "change-delete",
       changeId: this.__changeId,
     };
   }
 
-  static importJSON(serializedNode: SerializedChangeDeleteNode): ChangeDeleteNode {
+  static importJSON(
+    serializedNode: SerializedChangeDeleteNode,
+  ): ChangeDeleteNode {
     return new ChangeDeleteNode(serializedNode.changeId);
   }
 
   createDOM(): HTMLElement {
-    const el = document.createElement('span');
-    el.className = 'line-through bg-red-100 text-red-800';
+    const el = document.createElement("span");
+    el.className = "line-through bg-red-100 text-red-800";
     return el;
   }
 
@@ -54,6 +56,8 @@ export function $createChangeDeleteNode(changeId: string): ChangeDeleteNode {
   return new ChangeDeleteNode(changeId);
 }
 
-export function $isChangeDeleteNode(node: LexicalNode | null | undefined): node is ChangeDeleteNode {
+export function $isChangeDeleteNode(
+  node: LexicalNode | null | undefined,
+): node is ChangeDeleteNode {
   return node instanceof ChangeDeleteNode;
 }

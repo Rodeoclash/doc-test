@@ -1,25 +1,31 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { createPortal } from 'react-dom';
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
-  $getSelection,
-  $isRangeSelection,
-  $isElementNode,
-  $getRoot,
-  type LexicalNode,
-  type ElementNode,
-} from 'lexical';
-import { $isChangeDeleteNode, type ChangeDeleteNode } from '../nodes/change_delete';
-import { $isChangeInsertNode, type ChangeInsertNode } from '../nodes/change_insert';
-import {
-  computePosition,
-  flip,
-  shift,
-  offset,
   arrow,
   autoUpdate,
+  computePosition,
+  flip,
+  offset,
+  shift,
   type VirtualElement,
-} from '@floating-ui/dom';
+} from "@floating-ui/dom";
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import {
+  $getRoot,
+  $getSelection,
+  $isElementNode,
+  $isRangeSelection,
+  type ElementNode,
+  type LexicalNode,
+} from "lexical";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import {
+  $isChangeDeleteNode,
+  type ChangeDeleteNode,
+} from "../nodes/change_delete";
+import {
+  $isChangeInsertNode,
+  type ChangeInsertNode,
+} from "../nodes/change_insert";
 
 type ChangeNode = ChangeDeleteNode | ChangeInsertNode;
 
@@ -141,11 +147,11 @@ export function ChangePopoverPlugin() {
     const arrowEl = arrowRef.current;
     if (!activeChangeId || !reference || !popoverEl || !arrowEl) return;
 
-    popoverEl.style.visibility = 'hidden';
+    popoverEl.style.visibility = "hidden";
 
     return autoUpdate(reference, popoverEl, () => {
       computePosition(reference, popoverEl, {
-        placement: 'bottom',
+        placement: "bottom",
         middleware: [
           offset(8),
           flip(),
@@ -155,22 +161,23 @@ export function ChangePopoverPlugin() {
       }).then(({ x, y, placement, middlewareData }) => {
         popoverEl.style.left = `${x}px`;
         popoverEl.style.top = `${y}px`;
-        popoverEl.style.visibility = 'visible';
+        popoverEl.style.visibility = "visible";
 
         // Position the arrow on the edge facing the reference.
         // placement may flip (e.g. bottom → top), so we derive which
         // edge the arrow sits on from the actual resolved placement.
-        const side = placement.split('-')[0] as 'top' | 'bottom';
-        const staticSide = side === 'bottom' ? 'top' : 'bottom';
-        const arrowRotation = side === 'bottom' ? 'rotate(45deg)' : 'rotate(225deg)';
+        const side = placement.split("-")[0] as "top" | "bottom";
+        const staticSide = side === "bottom" ? "top" : "bottom";
+        const arrowRotation =
+          side === "bottom" ? "rotate(45deg)" : "rotate(225deg)";
         const arrowData = middlewareData.arrow;
 
         if (arrowData) {
           Object.assign(arrowEl.style, {
-            left: arrowData.x != null ? `${arrowData.x}px` : '',
-            top: '',
-            bottom: '',
-            [staticSide]: '-4px',
+            left: arrowData.x != null ? `${arrowData.x}px` : "",
+            top: "",
+            bottom: "",
+            [staticSide]: "-4px",
             transform: arrowRotation,
           });
         }
@@ -181,13 +188,13 @@ export function ChangePopoverPlugin() {
   // Accept: unwrap the insert node's children into the paragraph, remove the delete node.
   // Reject: unwrap the delete node's children into the paragraph, remove the insert node.
   const resolveChange = useCallback(
-    (keepType: 'insert' | 'delete') => {
+    (keepType: "insert" | "delete") => {
       if (!activeChangeId) return;
 
       editor.update(() => {
         const { deleteNode, insertNode } = $findChangeNodesById(activeChangeId);
 
-        if (keepType === 'insert') {
+        if (keepType === "insert") {
           if (insertNode) $unwrapChangeNode(insertNode);
           if (deleteNode) deleteNode.remove();
         } else {
@@ -216,13 +223,13 @@ export function ChangePopoverPlugin() {
       />
       <button
         className="px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-800 rounded cursor-pointer"
-        onClick={() => resolveChange('insert')}
+        onClick={() => resolveChange("insert")}
       >
         Accept
       </button>
       <button
         className="px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-800 rounded cursor-pointer"
-        onClick={() => resolveChange('delete')}
+        onClick={() => resolveChange("delete")}
       >
         Reject
       </button>

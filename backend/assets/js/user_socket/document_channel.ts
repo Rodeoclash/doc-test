@@ -1,5 +1,5 @@
-import type { Channel } from 'phoenix';
-import socket from '../user_socket';
+import type { Channel } from "phoenix";
+import socket from "../user_socket";
 
 /**
  * Creates a Phoenix channel for the given document.

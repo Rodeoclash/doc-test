@@ -1,6 +1,6 @@
-import { Socket } from "phoenix"
+import { Socket } from "phoenix";
 
-const socket = new Socket("/socket", {})
-socket.connect()
+const socket = new Socket("/socket", {});
+socket.connect();
 
-export default socket
+export default socket;
