@@ -12,6 +12,7 @@
     "y-protocols": "^1.0.7"
   },
   "devDependencies": {
+    "@types/phoenix": "^1.6.7",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3"
   }
