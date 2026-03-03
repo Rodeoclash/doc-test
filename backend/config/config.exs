@@ -36,7 +36,7 @@ config :esbuild,
   version: "0.25.4",
   backend: [
     args:
-      ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=. --loader:.tsx=tsx --loader:.ts=ts --jsx=automatic),
+      ~w(js/public.ts js/private.ts --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=. --loader:.tsx=tsx --loader:.ts=ts --jsx=automatic),
     cd: Path.expand("../assets", __DIR__),
     env: %{
       "NODE_PATH" => [
