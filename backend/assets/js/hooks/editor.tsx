@@ -14,9 +14,20 @@ class EditorHook extends Hook {
       throw new Error("EditorHook: missing data-document-id");
     }
 
+    const username = this.el.dataset.username;
+    if (!username) {
+      throw new Error("EditorHook: missing data-username");
+    }
+
     this.channel = createDocumentChannel(documentId);
     this.root = createRoot(this.el);
-    this.root.render(<Editor channel={this.channel} documentId={documentId} />);
+    this.root.render(
+      <Editor
+        channel={this.channel}
+        documentId={documentId}
+        username={username}
+      />,
+    );
   }
 
   destroyed() {

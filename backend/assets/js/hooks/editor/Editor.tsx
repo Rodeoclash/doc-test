@@ -24,9 +24,10 @@ function onError(error: Error): void {
 type EditorProps = {
   channel: Channel;
   documentId: string;
+  username: string;
 };
 
-export default function Editor({ channel, documentId }: EditorProps) {
+export default function Editor({ channel, documentId, username }: EditorProps) {
   const initialConfig: InitialConfigType = {
     // No editorState — CollaborationPlugin manages state via Yjs
     editorState: null,
@@ -56,7 +57,7 @@ export default function Editor({ channel, documentId }: EditorProps) {
             return new PhoenixChannelProvider(channel, doc);
           }}
           shouldBootstrap={false}
-          username="User"
+          username={username}
           cursorColor="#0ea5e9"
         />
         <AutoFocusPlugin />
