@@ -11,8 +11,7 @@ class EditorHook extends Hook {
   mounted() {
     const documentId = this.el.dataset.documentId;
     if (!documentId) {
-      console.error('EditorHook: missing data-document-id');
-      return;
+      throw new Error('EditorHook: missing data-document-id');
     }
 
     this.channel = createDocumentChannel(documentId);
