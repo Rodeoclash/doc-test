@@ -8,7 +8,8 @@ defmodule BackendWeb.DocumentLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <div id="editor" phx-hook="Editor" data-document-id={@document.id} data-username="sam@example.com"></div>
+    <div id="editor" phx-hook="Editor" data-document-id={@document.id} data-username="sam@example.com">
+    </div>
     """
   end
 end
