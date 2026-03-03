@@ -1,0 +1,5 @@
+pre-commit:
+  jobs:
+    - name: biome
+      glob: "backend/assets/js/**/*.{js,ts,tsx}"
+      run: npx @biomejs/biome check --staged --no-errors-on-unmatched --files-ignore-unknown=true

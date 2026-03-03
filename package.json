@@ -1,0 +1,8 @@
+{
+  "name": "doc-test",
+  "private": true,
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.5",
+    "lefthook": "^2.1.2"
+  }
+}
