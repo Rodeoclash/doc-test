@@ -14,7 +14,9 @@ defmodule Backend.Documents.EditBot do
 
   use GenServer
 
+  alias Backend.Documents
   alias Backend.Documents.DocServer
+  alias Backend.Organisations
 
   require Logger
 
@@ -39,21 +41,23 @@ defmodule Backend.Documents.EditBot do
 
   @impl true
   def init(document_id) do
-    case DocServer.find_or_start(document_id) do
-      {:ok, doc_server} ->
-        port = open_sidecar_port()
-        schedule_tick()
+    with {:ok, doc_server} <- DocServer.find_or_start(document_id),
+         %{organisation_id: org_id} <- Documents.get(document_id),
+         {:ok, agent} <- Organisations.get_agent(org_id) do
+      port = open_sidecar_port()
+      schedule_tick()
 
-        {:ok,
-         %{
-           document_id: document_id,
-           doc_server: doc_server,
-           port: port,
-           pending_caller: nil
-         }}
-
-      {:error, reason} ->
-        {:stop, reason}
+      {:ok,
+       %{
+         document_id: document_id,
+         doc_server: doc_server,
+         agent: agent,
+         port: port,
+         pending_caller: nil
+       }}
+    else
+      nil -> {:stop, :document_not_found}
+      {:error, reason} -> {:stop, reason}
     end
   end
 
