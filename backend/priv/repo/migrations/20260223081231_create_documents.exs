@@ -5,7 +5,7 @@ defmodule Backend.Repo.Migrations.CreateDocuments do
     create table(:documents) do
       add :name, :string
       add :yjs_state, :binary
-      add :organisation_id, references(:organisations, on_delete: :nothing)
+      add :organisation_id, references(:organisations), null: false
 
       timestamps(type: :utc_datetime)
     end
