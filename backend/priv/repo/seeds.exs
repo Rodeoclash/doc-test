@@ -134,8 +134,11 @@ _lexical_content = %{
   conflict_target: :id
 )
 
-# Create a test user for development
-case Accounts.register_user(%{email: "test@example.com", password: "password1234"}) do
-  {:ok, _user} -> :ok
-  {:error, _changeset} -> :ok
-end
+# Create a test user for development with a password for convenience.
+{:ok, test_user} =
+  case Accounts.register_user(%{email: "test@example.com"}) do
+    {:ok, user} -> {:ok, user}
+    {:error, _changeset} -> {:ok, Accounts.get_user_by_email("test@example.com")}
+  end
+
+Accounts.update_user_password(test_user, %{password: "abcd12345678"})
