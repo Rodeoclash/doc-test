@@ -8,6 +8,7 @@ defmodule Backend.Organisations.Organisation do
     field :name, :string
 
     has_many :documents, Backend.Documents.Document
+    has_many :users, Backend.Accounts.User
 
     timestamps(type: :utc_datetime)
   end
