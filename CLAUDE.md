@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Structure
 
-Phoenix app in `backend/` with a React/Lexical editor built via esbuild, orchestrated via Docker Compose. A `justfile` provides task runner shortcuts.
+Phoenix app in `backend/` with a collaborative React/Lexical editor built via esbuild, orchestrated via Docker Compose. A `justfile` provides task runner shortcuts.
 
 ## Commands
 
@@ -14,27 +14,37 @@ Phoenix app in `backend/` with a React/Lexical editor built via esbuild, orchest
 - **Run a command in a container:** `just run <service> <cmd>` (e.g. `just run backend mix test`)
 - **Install editor npm deps:** `just run backend npm install --prefix assets`
 
+## Formatting & Linting
+
+- **Pre-commit hooks** via lefthook (`lefthook.yml`): runs Biome on JS/TS/TSX and `mix format` on Elixir files.
+- **Biome** (`biome.json` at root): linter + formatter for `backend/assets/js/**`. Root `package.json` has `@biomejs/biome` and `lefthook` as dev deps.
+
 ## Architecture
 
 ### Backend (`backend/`)
 
 Elixir/Phoenix app with LiveView. Uses `Dockerfile.dev` for local development (includes Node.js 22 for npm). Runs on port 4000. Waits for Postgres to be healthy before starting.
 
-**Lexical Editor (`backend/assets/js/editor/`):** React 19 + TypeScript components built by a dedicated esbuild profile (`editor`). Outputs to `priv/static/assets/js/index.js`.
+**JS Entry Points (`backend/assets/js/`):** Two bundles built by a single esbuild profile (`backend`) configured in `config/config.exs`:
+- `public.ts` — For unauthenticated pages. Sets up LiveSocket with colocated hooks only.
+- `private.ts` — For authenticated pages. Imports the Editor hook and user socket in addition to colocated hooks.
+- `shared.ts` — Common `setupLiveSocket()` helper used by both entry points.
 
-- `Editor.tsx` — Lexical editor with RichTextPlugin, HistoryPlugin, AutoFocusPlugin, OnChangePlugin. Registers the custom `SectionNode`.
-- `section.ts` — `SectionNode` extends `ElementNode` for document sections with a `heading` property. Uses Tailwind classes for styling. Exports `$createSectionNode`, `$isSectionNode`, and `SerializedSectionNode` type.
-- `index.tsx` — Entry point. Exports `mount(el)` and `unmount()` functions for use by LiveView hooks.
+**Lexical Editor (`backend/assets/js/hooks/editor/`):** React 19 + TypeScript collaborative editor using Lexical with Yjs.
 
-**LiveView Hook (`backend/assets/js/hooks/editor_hook.ts`):** Mounts/unmounts the React editor. Registered in `app.js` as `EditorHook`. Use in any template:
+- `Editor.tsx` — Lexical editor with RichTextPlugin, CollaborationPlugin (Yjs), AutoFocusPlugin, and ChangePopoverPlugin. Registers `ChangeDeleteNode` and `ChangeInsertNode`.
+- `nodes/change_delete.ts`, `nodes/change_insert.ts` — Custom Lexical nodes for tracking changes.
+- `plugins/ChangePopoverPlugin.tsx` — Plugin for change review UI.
+
+**LiveView Hook (`backend/assets/js/hooks/editor.tsx`):** Mounts/unmounts the React editor using `phoenix_typed_hook`. Registered in `private.ts` as `Editor`. Requires `data-document-id` and `data-username` attributes. Use in templates:
 
 ```heex
-<div id="lexical-editor" phx-hook="EditorHook"></div>
+<div id="editor" phx-hook="Editor" data-document-id={@document.id} data-username={@current_scope.user.email}></div>
 ```
 
-**esbuild:** Two profiles configured in `config/config.exs` — `backend` (Phoenix/LiveView JS) and `editor` (React/Lexical TSX). Both run as watchers in dev.
+**Yjs Collaboration (`backend/assets/js/user_socket/`):** `PhoenixChannelProvider.ts` bridges Yjs documents over Phoenix Channels. `document_channel.ts` creates the channel connection.
 
-**npm deps:** Managed via `backend/assets/package.json`. React, Lexical, and type definitions installed in `backend/assets/node_modules/`.
+**npm deps:** Managed via `backend/assets/package.json`. Key deps: React, Lexical, `y-protocols`, `@floating-ui/dom`, `phoenix_typed_hook`.
 
 ### Docker
 
