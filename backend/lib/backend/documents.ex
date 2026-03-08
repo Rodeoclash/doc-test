@@ -4,7 +4,12 @@ defmodule Backend.Documents do
   alias Backend.Repo
 
   @doc """
-  Gets a single organisation by id. Returns nil if not found.
+  Returns the PubSub topic for a document.
+  """
+  def topic(document_id), do: "document:#{document_id}"
+
+  @doc """
+  Gets a single document by id. Returns nil if not found.
   """
   @spec get(integer()) :: Document.t() | nil
   def get(id), do: Repo.get(Document, id)
