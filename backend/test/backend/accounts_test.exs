@@ -2,10 +2,29 @@ defmodule Backend.AccountsTest do
   use Backend.DataCase
 
   import Backend.AccountsFixtures
+  import Backend.Factory
 
   alias Backend.Accounts
   alias Backend.Accounts.User
   alias Backend.Accounts.UserToken
+
+  describe "get_agent_for_organisation/1" do
+    test "returns the agent for the organisation" do
+      agent = insert(:agent)
+      assert {:ok, %User{id: id}} = Accounts.get_agent_for_organisation(agent.organisation_id)
+      assert id == agent.id
+    end
+
+    test "returns error when no agent exists" do
+      org = insert(:organisation)
+      assert {:error, :not_found} = Accounts.get_agent_for_organisation(org.id)
+    end
+
+    test "does not return human users" do
+      user = insert(:user)
+      assert {:error, :not_found} = Accounts.get_agent_for_organisation(user.organisation_id)
+    end
+  end
 
   describe "get_user_by_email/1" do
     test "does not return the user if the email does not exist" do

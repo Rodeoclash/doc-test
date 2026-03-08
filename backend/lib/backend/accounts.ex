@@ -10,6 +10,20 @@ defmodule Backend.Accounts do
   alias Backend.Accounts.UserToken
   alias Backend.Repo
 
+  ## Agents
+
+  @doc """
+  Gets the agent user for a given organisation.
+
+  Returns `{:ok, user}` if found, `{:error, :not_found}` otherwise.
+  """
+  def get_agent_for_organisation(organisation_id) do
+    case Repo.get_by(User, organisation_id: organisation_id, type: :agent) do
+      %User{} = agent -> {:ok, agent}
+      nil -> {:error, :not_found}
+    end
+  end
+
   ## Database getters
 
   @doc """
