@@ -10,6 +10,9 @@ defmodule Backend.Accounts.User do
     field :hashed_password, :string, redact: true
     field :confirmed_at, :utc_datetime
     field :authenticated_at, :utc_datetime, virtual: true
+    field :type, Ecto.Enum, values: [:human, :agent], default: :human
+
+    belongs_to :organisation, Backend.Organisations.Organisation
 
     timestamps(type: :utc_datetime)
   end
@@ -27,7 +30,9 @@ defmodule Backend.Accounts.User do
   """
   def email_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:email])
+    |> cast(attrs, [:email, :organisation_id])
+    |> validate_required([:organisation_id])
+    |> foreign_key_constraint(:organisation_id)
     |> validate_email(opts)
   end
 
