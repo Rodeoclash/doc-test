@@ -2,7 +2,9 @@ pre-commit:
   jobs:
     - name: biome
       glob: "backend/assets/js/**/*.{js,ts,tsx}"
-      run: npx @biomejs/biome check --staged --no-errors-on-unmatched --files-ignore-unknown=true
+      run: npx @biomejs/biome check --write --staged --no-errors-on-unmatched --files-ignore-unknown=true
+      stage_fixed: true
     - name: mix-format
       glob: "backend/**/*.{ex,exs}"
-      run: docker compose run --rm backend mix format --check-formatted
+      run: docker compose run --rm backend mix format
+      stage_fixed: true
