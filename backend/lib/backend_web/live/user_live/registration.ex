@@ -50,11 +50,15 @@ defmodule BackendWeb.UserLive.Registration do
   def mount(_params, _session, socket) do
     changeset = Accounts.change_user_email(%User{}, %{}, validate_unique: false)
 
-    {:ok, assign_form(socket, changeset), temporary_assigns: [form: nil]}
+    # TODO: Determine organisation from invite link, subdomain, etc.
+    {:ok, socket |> assign(:organisation_id, default_organisation_id()) |> assign_form(changeset),
+     temporary_assigns: [form: nil]}
   end
 
   @impl true
   def handle_event("save", %{"user" => user_params}, socket) do
+    user_params = Map.put(user_params, "organisation_id", socket.assigns.organisation_id)
+
     case Accounts.register_user(user_params) do
       {:ok, user} ->
         {:ok, _} =
@@ -84,5 +88,12 @@ defmodule BackendWeb.UserLive.Registration do
   defp assign_form(socket, %Ecto.Changeset{} = changeset) do
     form = to_form(changeset, as: "user")
     assign(socket, form: form)
+  end
+
+  # TODO: Replace with proper org resolution (invite link, subdomain, etc.)
+  defp default_organisation_id do
+    import Ecto.Query
+
+    Backend.Organisations.Organisation |> first() |> Backend.Repo.one!() |> Map.fetch!(:id)
   end
 end
