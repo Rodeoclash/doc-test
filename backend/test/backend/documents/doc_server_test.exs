@@ -5,6 +5,7 @@ defmodule Backend.Documents.DocServerTest do
 
   alias Backend.Documents
   alias Backend.Documents.DocServer
+  alias Phoenix.Socket.Broadcast
 
   setup do
     # Stop all DocServer processes between tests
@@ -78,6 +79,84 @@ defmodule Backend.Documents.DocServerTest do
     end
   end
 
+  describe "get_encoded_state/1" do
+    test "returns the current Yjs state as a binary" do
+      document = insert(:document)
+      {:ok, pid} = DocServer.find_or_start(document.id)
+
+      {:ok, encoded} = DocServer.get_encoded_state(pid)
+      assert is_binary(encoded)
+    end
+
+    test "reflects applied updates" do
+      document = insert(:document)
+      {:ok, pid} = DocServer.find_or_start(document.id)
+
+      # Apply an update
+      update_doc = Yex.Doc.new()
+      text = Yex.Doc.get_text(update_doc, "root")
+      Yex.Text.insert(text, 0, "encoded state test")
+      {:ok, update} = Yex.encode_state_as_update(update_doc)
+      {:ok, message} = Yex.Sync.message_encode({:sync, {:sync_step2, update}})
+      DocServer.process_message_v1(pid, message, self())
+      :timer.sleep(50)
+
+      # Read back and verify
+      {:ok, encoded} = DocServer.get_encoded_state(pid)
+      verify_doc = Yex.Doc.new()
+      Yex.apply_update(verify_doc, encoded)
+      verify_text = Yex.Doc.get_text(verify_doc, "root")
+      assert Yex.Text.to_string(verify_text) == "encoded state test"
+    end
+  end
+
+  describe "apply_update/2" do
+    test "applies a Yjs update and persists it" do
+      document = insert(:document)
+      {:ok, pid} = DocServer.find_or_start(document.id)
+
+      update_doc = Yex.Doc.new()
+      text = Yex.Doc.get_text(update_doc, "root")
+      Yex.Text.insert(text, 0, "applied update")
+      {:ok, update} = Yex.encode_state_as_update(update_doc)
+
+      :ok = DocServer.apply_update(pid, update)
+      :timer.sleep(50)
+
+      # Verify persisted
+      updated_doc = Documents.get(document.id)
+      assert updated_doc.yjs_state
+
+      verify_doc = Yex.Doc.new()
+      Yex.apply_update(verify_doc, updated_doc.yjs_state)
+      verify_text = Yex.Doc.get_text(verify_doc, "root")
+      assert Yex.Text.to_string(verify_text) == "applied update"
+    end
+
+    test "broadcasts the update to subscribers" do
+      document = insert(:document)
+      topic = Documents.topic(document.id)
+      BackendWeb.Endpoint.subscribe(topic)
+
+      {:ok, pid} = DocServer.find_or_start(document.id)
+
+      update_doc = Yex.Doc.new()
+      text = Yex.Doc.get_text(update_doc, "root")
+      Yex.Text.insert(text, 0, "broadcast via apply_update")
+      {:ok, update} = Yex.encode_state_as_update(update_doc)
+
+      :ok = DocServer.apply_update(pid, update)
+
+      assert_receive %Broadcast{
+        topic: ^topic,
+        event: "yjs",
+        payload: %{"data" => data}
+      }
+
+      assert is_binary(data)
+    end
+  end
+
   describe "handle_update_v1/4" do
     test "persists state to the database after an update" do
       document = insert(:document)
@@ -108,7 +187,7 @@ defmodule Backend.Documents.DocServerTest do
 
     test "broadcasts update to the document topic" do
       document = insert(:document)
-      topic = "document:#{document.id}"
+      topic = Documents.topic(document.id)
       BackendWeb.Endpoint.subscribe(topic)
 
       {:ok, pid} = DocServer.find_or_start(document.id)
@@ -125,7 +204,7 @@ defmodule Backend.Documents.DocServerTest do
 
       DocServer.process_message_v1(pid, message, origin)
 
-      assert_receive %Phoenix.Socket.Broadcast{
+      assert_receive %Broadcast{
         topic: ^topic,
         event: "yjs",
         payload: %{"data" => data}

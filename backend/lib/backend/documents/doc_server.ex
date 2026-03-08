@@ -8,6 +8,14 @@ defmodule Backend.Documents.DocServer do
 
   # Public API
 
+  def get_encoded_state(doc_server) do
+    GenServer.call(doc_server, :get_encoded_state)
+  end
+
+  def apply_update(doc_server, update) do
+    GenServer.call(doc_server, {:apply_update, update})
+  end
+
   def find_or_start(document_id) do
     case Registry.lookup(Backend.DocRegistry, document_id) do
       [{pid, _}] ->
@@ -34,6 +42,17 @@ defmodule Backend.Documents.DocServer do
   end
 
   # Callbacks
+
+  @impl true
+  def handle_call(:get_encoded_state, _from, state) do
+    {:reply, Yex.encode_state_as_update(state.doc), state}
+  end
+
+  @impl true
+  def handle_call({:apply_update, update}, _from, state) do
+    Yex.apply_update(state.doc, update)
+    {:reply, :ok, state}
+  end
 
   @impl true
   def init(arg, state) do
@@ -72,13 +91,13 @@ defmodule Backend.Documents.DocServer do
     # Broadcast the incremental update to other clients
     {:ok, sync_update} = Yex.Sync.get_update(update)
     {:ok, message} = Yex.Sync.message_encode({:sync, sync_update})
+    payload = %{"data" => Base.encode64(message)}
 
-    BackendWeb.Endpoint.broadcast_from(
-      origin,
-      state.topic,
-      "yjs",
-      %{"data" => Base.encode64(message)}
-    )
+    if is_pid(origin) do
+      BackendWeb.Endpoint.broadcast_from(origin, state.topic, "yjs", payload)
+    else
+      BackendWeb.Endpoint.broadcast(state.topic, "yjs", payload)
+    end
 
     {:noreply, state}
   end
