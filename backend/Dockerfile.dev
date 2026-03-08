@@ -15,4 +15,4 @@ COPY . .
 
 EXPOSE 4000
 
-CMD ["mix", "phx.server"]
+CMD ["elixir", "--sname", "backend", "--cookie", "dev", "-S", "mix", "phx.server"]
