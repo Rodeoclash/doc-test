@@ -4,6 +4,11 @@ defmodule BackendWeb.UserLive.RegistrationTest do
   import Backend.AccountsFixtures
   import Phoenix.LiveViewTest
 
+  setup do
+    Backend.Repo.insert!(%Backend.Organisations.Organisation{name: "Test Org"})
+    :ok
+  end
+
   describe "Registration page" do
     test "renders registration page", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"/users/register")
@@ -40,7 +45,7 @@ defmodule BackendWeb.UserLive.RegistrationTest do
       {:ok, lv, _html} = live(conn, ~p"/users/register")
 
       email = unique_user_email()
-      form = form(lv, "#registration_form", user: valid_user_attributes(email: email))
+      form = form(lv, "#registration_form", user: %{email: email})
 
       {:ok, _lv, html} =
         form
