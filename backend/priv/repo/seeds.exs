@@ -136,7 +136,7 @@ _lexical_content = %{
 
 # Create a test user for development with a password for convenience.
 {:ok, test_user} =
-  case Accounts.register_user(%{email: "test@example.com"}) do
+  case Accounts.register_user(%{email: "test@example.com", organisation_id: organisation.id}) do
     {:ok, user} -> {:ok, user}
     {:error, _changeset} -> {:ok, Accounts.get_user_by_email("test@example.com")}
   end
