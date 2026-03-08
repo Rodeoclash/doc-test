@@ -11,6 +11,7 @@
 # and so on) as they will fail if something goes wrong.
 
 alias Backend.Accounts
+alias Backend.Accounts.User
 alias Backend.Documents.Document
 alias Backend.Organisations.Organisation
 alias Backend.Repo
@@ -142,3 +143,9 @@ _lexical_content = %{
   end
 
 Accounts.update_user_password(test_user, %{password: "abcd12345678"})
+
+# Create the AI agent for the organisation
+Repo.insert!(%User{email: "agent@system.local", type: :agent, organisation_id: organisation.id},
+  on_conflict: :nothing,
+  conflict_target: :email
+)
