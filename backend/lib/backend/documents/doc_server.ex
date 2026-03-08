@@ -54,7 +54,7 @@ defmodule Backend.Documents.DocServer do
         end)
       end
 
-      {:ok, Map.merge(state, %{document_id: document_id, topic: "document:#{document_id}"})}
+      {:ok, Map.merge(state, %{document_id: document_id, topic: Documents.topic(document_id)})}
     end
   end
 
