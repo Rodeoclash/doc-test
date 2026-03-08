@@ -58,6 +58,16 @@ config :esbuild,
         Path.expand("../assets/node_modules", __DIR__)
       ]
     }
+  ],
+  sidecar: [
+    args:
+      ~w(js/sidecar.ts --bundle --platform=node --format=esm --outfile=../priv/sidecar/index.mjs --alias:@=. --loader:.tsx=tsx --loader:.ts=ts),
+    cd: Path.expand("../assets", __DIR__),
+    env: %{
+      "NODE_PATH" => [
+        Path.expand("../assets/node_modules", __DIR__)
+      ]
+    }
   ]
 
 # Configure Elixir's Logger
