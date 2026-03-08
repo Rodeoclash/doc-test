@@ -8,14 +8,23 @@ defmodule Backend.Documents.DocServer do
 
   # Public API
 
+  @doc """
+  Returns the full Yjs document state as an encoded binary.
+  """
   def get_encoded_state(doc_server) do
     GenServer.call(doc_server, :get_encoded_state)
   end
 
+  @doc """
+  Applies a Yjs update binary to the document. Triggers persistence and broadcast.
+  """
   def apply_update(doc_server, update) do
     GenServer.call(doc_server, {:apply_update, update})
   end
 
+  @doc """
+  Finds a running DocServer for the given document or starts one.
+  """
   def find_or_start(document_id) do
     case Registry.lookup(Backend.DocRegistry, document_id) do
       [{pid, _}] ->
