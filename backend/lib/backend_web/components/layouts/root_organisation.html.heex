@@ -22,7 +22,9 @@
         <div class="text-sm mb-2">{@current_scope.user.email}</div>
         <ul class="space-y-1 text-sm">
           <li><.link href={~p"/users/settings"} class="underline">Settings</.link></li>
-          <li><.link href={~p"/users/log-out"} method="delete" class="underline">Log out</.link></li>
+          <li>
+            <.link href={~p"/users/log-out"} method="delete" class="underline">Log out</.link>
+          </li>
         </ul>
       </div>
     </aside>
