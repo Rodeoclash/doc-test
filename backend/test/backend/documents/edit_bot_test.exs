@@ -19,7 +19,7 @@ defmodule Backend.Documents.EditBotTest do
   describe "start_link/1" do
     test "starts the GenServer for a valid document" do
       document = insert(:document)
-      insert(:agent, organisation: document.organisation)
+      insert(:organisation_user, user: insert(:agent), organisation: document.organisation)
       assert {:ok, pid} = EditBot.start_link(document_id: document.id)
       assert Process.alive?(pid)
 
@@ -43,7 +43,7 @@ defmodule Backend.Documents.EditBotTest do
   describe "execute_command/2" do
     test "applies a sidecar edit to the document" do
       document = insert(:document)
-      insert(:agent, organisation: document.organisation)
+      insert(:organisation_user, user: insert(:agent), organisation: document.organisation)
       {:ok, pid} = EditBot.start_link(document_id: document.id)
 
       on_exit(fn ->
@@ -69,7 +69,7 @@ defmodule Backend.Documents.EditBotTest do
 
     test "returns error for unknown commands" do
       document = insert(:document)
-      insert(:agent, organisation: document.organisation)
+      insert(:organisation_user, user: insert(:agent), organisation: document.organisation)
       {:ok, pid} = EditBot.start_link(document_id: document.id)
 
       on_exit(fn ->
@@ -85,7 +85,7 @@ defmodule Backend.Documents.EditBotTest do
     test "stops when the sidecar process exits unexpectedly" do
       Process.flag(:trap_exit, true)
       document = insert(:document)
-      insert(:agent, organisation: document.organisation)
+      insert(:organisation_user, user: insert(:agent), organisation: document.organisation)
       {:ok, pid} = EditBot.start_link(document_id: document.id)
 
       ref = Process.monitor(pid)
