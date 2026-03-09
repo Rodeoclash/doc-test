@@ -17,7 +17,7 @@ defmodule BackendWeb.Router do
   end
 
   pipeline :private do
-    plug :put_root_layout, html: {BackendWeb.Layouts, :root_private}
+    plug :put_root_layout, html: {BackendWeb.Layouts, :root_organisation}
     plug :put_user_token
   end
 
