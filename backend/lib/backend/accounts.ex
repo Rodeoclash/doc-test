@@ -18,10 +18,23 @@ defmodule Backend.Accounts do
   Returns `{:ok, user}` if found, `{:error, :not_found}` otherwise.
   """
   def get_agent_for_organisation(organisation_id) do
-    case Repo.get_by(User, organisation_id: organisation_id, type: :agent) do
+    query =
+      from u in User,
+        join: ou in Backend.Organisations.OrganisationUser,
+        on: ou.user_id == u.id,
+        where: ou.organisation_id == ^organisation_id and u.type == :agent
+
+    case Repo.one(query) do
       %User{} = agent -> {:ok, agent}
       nil -> {:error, :not_found}
     end
+  end
+
+  @doc """
+  Registers an agent user with the given email.
+  """
+  def register_agent(email) do
+    Repo.insert(%User{type: :agent, email: email})
   end
 
   ## Database getters

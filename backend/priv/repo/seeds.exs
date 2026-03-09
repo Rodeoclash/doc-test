@@ -11,9 +11,9 @@
 # and so on) as they will fail if something goes wrong.
 
 alias Backend.Accounts
-alias Backend.Accounts.User
 alias Backend.Documents.Document
 alias Backend.Organisations.Organisation
+alias Backend.Organisations.OrganisationUser
 alias Backend.Repo
 
 now = DateTime.truncate(DateTime.utc_now(), :second)
@@ -128,6 +128,7 @@ _lexical_content = %{
   }
 }
 
+# Test document for local dev
 %Document{id: 1, name: "ISMS Plan", organisation_id: organisation.id}
 |> Map.merge(timestamps)
 |> Repo.insert!(
@@ -137,15 +138,28 @@ _lexical_content = %{
 
 # Create a test user for development with a password for convenience.
 {:ok, test_user} =
-  case Accounts.register_user(%{email: "test@example.com", organisation_id: organisation.id}) do
+  case Accounts.register_user(%{"email" => "test@example.com"}) do
     {:ok, user} -> {:ok, user}
     {:error, _changeset} -> {:ok, Accounts.get_user_by_email("test@example.com")}
   end
 
 Accounts.update_user_password(test_user, %{password: "abcd12345678"})
 
-# Create the AI agent for the organisation
-Repo.insert!(%User{email: "agent@system.local", type: :agent, organisation_id: organisation.id},
+# Add the test user to the organisation
+Repo.insert!(%OrganisationUser{user_id: test_user.id, organisation_id: organisation.id},
   on_conflict: :nothing,
-  conflict_target: :email
+  conflict_target: [:organisation_id, :user_id]
+)
+
+# Create the AI agent for the organisation
+{:ok, agent} =
+  case Accounts.register_agent("agent@system.local") do
+    {:ok, agent} -> {:ok, agent}
+    {:error, _changeset} -> {:ok, Accounts.get_user_by_email("agent@system.local")}
+  end
+
+# Add the agent to the organisation
+Repo.insert!(%OrganisationUser{user_id: agent.id, organisation_id: organisation.id},
+  on_conflict: :nothing,
+  conflict_target: [:organisation_id, :user_id]
 )

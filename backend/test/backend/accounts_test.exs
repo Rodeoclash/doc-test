@@ -10,8 +10,11 @@ defmodule Backend.AccountsTest do
 
   describe "get_agent_for_organisation/1" do
     test "returns the agent for the organisation" do
+      org = insert(:organisation)
       agent = insert(:agent)
-      assert {:ok, %User{id: id}} = Accounts.get_agent_for_organisation(agent.organisation_id)
+      insert(:organisation_user, user: agent, organisation: org)
+
+      assert {:ok, %User{id: id}} = Accounts.get_agent_for_organisation(org.id)
       assert id == agent.id
     end
 
@@ -21,8 +24,19 @@ defmodule Backend.AccountsTest do
     end
 
     test "does not return human users" do
+      org = insert(:organisation)
       user = insert(:user)
-      assert {:error, :not_found} = Accounts.get_agent_for_organisation(user.organisation_id)
+      insert(:organisation_user, user: user, organisation: org)
+
+      assert {:error, :not_found} = Accounts.get_agent_for_organisation(org.id)
+    end
+  end
+
+  describe "register_agent/1" do
+    test "creates an agent user" do
+      assert {:ok, agent} = Accounts.register_agent("bot@system.local")
+      assert agent.type == :agent
+      assert agent.email == "bot@system.local"
     end
   end
 
@@ -129,7 +143,7 @@ defmodule Backend.AccountsTest do
   describe "change_user_email/3" do
     test "returns a user changeset" do
       assert %Ecto.Changeset{} = changeset = Accounts.change_user_email(%User{})
-      assert changeset.required == [:email, :organisation_id]
+      assert changeset.required == [:email]
     end
   end
 
