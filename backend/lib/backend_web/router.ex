@@ -42,6 +42,12 @@ defmodule BackendWeb.Router do
       live "/users/log-in/:token", UserLive.Confirmation, :new
     end
 
+    live_session :require_authenticated_user,
+      on_mount: [{BackendWeb.UserAuth, :require_authenticated}] do
+      live "/users/settings", UserLive.Settings, :edit
+      live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
+    end
+
     post "/users/log-in", UserSessionController, :create
     delete "/users/log-out", UserSessionController, :delete
   end
@@ -66,12 +72,6 @@ defmodule BackendWeb.Router do
       ],
       layout: {BackendWeb.Layouts, :organisation} do
       live "/organisations/:organisation_id/documents/:id", DocumentLive.Show
-    end
-
-    live_session :require_authenticated_user,
-      on_mount: [{BackendWeb.UserAuth, :require_authenticated}] do
-      live "/users/settings", UserLive.Settings, :edit
-      live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
     end
 
     post "/users/update-password", UserSessionController, :update_password
