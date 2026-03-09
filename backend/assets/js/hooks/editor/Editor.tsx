@@ -41,12 +41,7 @@ export default function Editor({ channel, documentId, username }: EditorProps) {
     <LexicalComposer initialConfig={initialConfig}>
       <LexicalCollaboration>
         <RichTextPlugin
-          contentEditable={
-            <ContentEditable
-              aria-placeholder={"Enter some text..."}
-              placeholder={<div>Enter some text...</div>}
-            />
-          }
+          contentEditable={<ContentEditable />}
           ErrorBoundary={LexicalErrorBoundary}
         />
         <CollaborationPlugin
