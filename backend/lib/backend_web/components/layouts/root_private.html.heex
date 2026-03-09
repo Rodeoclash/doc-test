@@ -12,12 +12,23 @@
     <script defer phx-track-static type="text/javascript" src={~p"/assets/js/private.js"}>
     </script>
   </head>
-  <body>
-    <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-      <li>{@current_scope.user.email}</li>
-      <li><.link href={~p"/users/settings"}>Settings</.link></li>
-      <li><.link href={~p"/users/log-out"} method="delete">Log out</.link></li>
-    </ul>
-    {@inner_content}
+  <body class="h-dvh grid grid-cols-[16rem_1fr]">
+    <aside class="h-dvh border-r border-base-300 p-4 flex flex-col">
+      <div class="font-bold text-lg">
+        {@organisation.name}
+      </div>
+
+      <div class="mt-auto">
+        <div class="text-sm mb-2">{@current_scope.user.email}</div>
+        <ul class="menu menu-sm gap-1">
+          <li><.link href={~p"/users/settings"}>Settings</.link></li>
+          <li><.link href={~p"/users/log-out"} method="delete">Log out</.link></li>
+        </ul>
+      </div>
+    </aside>
+
+    <div class="overflow-auto">
+      {@inner_content}
+    </div>
   </body>
 </html>
