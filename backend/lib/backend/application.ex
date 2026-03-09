@@ -14,6 +14,7 @@ defmodule Backend.Application do
       {Phoenix.PubSub, name: Backend.PubSub},
       {Registry, keys: :unique, name: Backend.DocRegistry},
       {DynamicSupervisor, name: Backend.DocSupervisor, strategy: :one_for_one},
+      Backend.Jido,
       BackendWeb.Endpoint
     ]
 
