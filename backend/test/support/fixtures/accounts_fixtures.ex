@@ -14,13 +14,9 @@ defmodule Backend.AccountsFixtures do
 
   def valid_user_attributes(attrs \\ %{}) do
     Enum.into(attrs, %{
-      email: unique_user_email(),
-      organisation_id: lazy_organisation_id(attrs)
+      email: unique_user_email()
     })
   end
-
-  defp lazy_organisation_id(%{organisation_id: id}) when not is_nil(id), do: id
-  defp lazy_organisation_id(_attrs), do: Backend.Factory.insert(:organisation).id
 
   def unconfirmed_user_fixture(attrs \\ %{}) do
     {:ok, user} =
