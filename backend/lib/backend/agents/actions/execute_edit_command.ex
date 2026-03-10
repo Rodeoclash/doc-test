@@ -9,6 +9,6 @@ defmodule Backend.Agents.Actions.ExecuteEditCommand do
 
   @impl true
   def run(params, _context) do
-    {:ok, %{status: :editing, last_command: params.command}}
+    {:ok, %{last_command: params.command}}
   end
 end
