@@ -3,6 +3,7 @@ defmodule Backend.Documents.DocServer do
   use Yex.DocServer
 
   alias Backend.Documents
+  alias Backend.Documents.Sidecar
 
   require Logger
 
@@ -23,30 +24,36 @@ defmodule Backend.Documents.DocServer do
   end
 
   @doc """
+  Executes an edit command via the sidecar. Lazily starts the sidecar on first use.
+  Gets current state, sends to sidecar, applies the resulting update.
+  """
+  def execute_edit(doc_server, command) do
+    GenServer.call(doc_server, {:execute_edit, command}, 30_000)
+  end
+
+  @doc """
   Finds a running DocServer for the given document or starts one.
   """
   def find_or_start(document_id) do
-    case Registry.lookup(Backend.DocRegistry, document_id) do
-      [{pid, _}] ->
-        Logger.info("DocServer already running for document #{document_id} (#{inspect(pid)})")
-        {:ok, pid}
-
-      [] ->
+    case :global.whereis_name({__MODULE__, document_id}) do
+      :undefined ->
         Logger.info("Starting DocServer for document #{document_id}")
 
         DynamicSupervisor.start_child(
           Backend.DocSupervisor,
           {__MODULE__, document_id}
         )
+
+      pid ->
+        Logger.info("DocServer already running for document #{document_id} (#{inspect(pid)})")
+        {:ok, pid}
     end
   end
 
   def child_spec(document_id) do
     %{
       id: {__MODULE__, document_id},
-      start:
-        {__MODULE__, :start_link,
-         [[document_id: document_id], [name: {:via, Registry, {Backend.DocRegistry, document_id}}]]}
+      start: {__MODULE__, :start_link, [[document_id: document_id], [name: {:global, {__MODULE__, document_id}}]]}
     }
   end
 
@@ -61,6 +68,20 @@ defmodule Backend.Documents.DocServer do
   def handle_call({:apply_update, update}, _from, state) do
     Yex.apply_update(state.doc, update)
     {:reply, :ok, state}
+  end
+
+  def handle_call({:execute_edit, command}, _from, state) do
+    {:ok, state} = ensure_sidecar(state)
+    encoded_state = Yex.encode_state_as_update(state.doc)
+
+    case Sidecar.execute(state.sidecar, command, encoded_state) do
+      {:ok, update} ->
+        Yex.apply_update(state.doc, update)
+        {:reply, :ok, state}
+
+      {:error, reason} ->
+        {:reply, {:error, reason}, state}
+    end
   end
 
   @impl true
@@ -82,7 +103,12 @@ defmodule Backend.Documents.DocServer do
         end)
       end
 
-      {:ok, Map.merge(state, %{document_id: document_id, topic: Documents.topic(document_id)})}
+      {:ok,
+       Map.merge(state, %{
+         document_id: document_id,
+         topic: Documents.topic(document_id),
+         sidecar: nil
+       })}
     end
   end
 
@@ -109,5 +135,34 @@ defmodule Backend.Documents.DocServer do
     end
 
     {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:DOWN, _ref, :process, pid, _reason}, %{sidecar: pid} = state) do
+    Logger.warning("Sidecar process died for document #{state.document_id}")
+    {:noreply, %{state | sidecar: nil}}
+  end
+
+  # Private
+
+  defp ensure_sidecar(%{sidecar: pid} = state) when is_pid(pid) do
+    if Process.alive?(pid) do
+      {:ok, state}
+    else
+      start_sidecar(state)
+    end
+  end
+
+  defp ensure_sidecar(state), do: start_sidecar(state)
+
+  defp start_sidecar(state) do
+    case Sidecar.start_link() do
+      {:ok, pid} ->
+        Process.monitor(pid)
+        {:ok, %{state | sidecar: pid}}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 end

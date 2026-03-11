@@ -3,6 +3,8 @@ defmodule BackendWeb.DocumentChannelTest do
 
   import Backend.Factory
 
+  alias Backend.Documents.DocServer
+
   setup do
     # Clean up any DocServer processes between tests
     Backend.DocSupervisor
@@ -32,28 +34,29 @@ defmodule BackendWeb.DocumentChannelTest do
     test "starts a DocServer on join" do
       document = insert(:document)
 
-      assert Registry.lookup(Backend.DocRegistry, document.id) == []
+      assert :global.whereis_name({DocServer, document.id}) == :undefined
 
       {:ok, _, _socket} =
         BackendWeb.UserSocket
         |> socket("", %{})
         |> subscribe_and_join(BackendWeb.DocumentChannel, "document:#{document.id}")
 
-      assert [{pid, _}] = Registry.lookup(Backend.DocRegistry, document.id)
+      pid = :global.whereis_name({DocServer, document.id})
+      assert is_pid(pid)
       assert Process.alive?(pid)
     end
 
     test "reuses existing DocServer for same document" do
       document = insert(:document)
-      {:ok, _} = Backend.Documents.DocServer.find_or_start(document.id)
-      [{pid_before, _}] = Registry.lookup(Backend.DocRegistry, document.id)
+      {:ok, _} = DocServer.find_or_start(document.id)
+      pid_before = :global.whereis_name({DocServer, document.id})
 
       {:ok, _, _socket} =
         BackendWeb.UserSocket
         |> socket("", %{})
         |> subscribe_and_join(BackendWeb.DocumentChannel, "document:#{document.id}")
 
-      [{pid_after, _}] = Registry.lookup(Backend.DocRegistry, document.id)
+      pid_after = :global.whereis_name({DocServer, document.id})
       assert pid_before == pid_after
     end
 

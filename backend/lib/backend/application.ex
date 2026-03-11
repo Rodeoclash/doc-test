@@ -12,7 +12,6 @@ defmodule Backend.Application do
       Backend.Repo,
       {DNSCluster, query: Application.get_env(:backend, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Backend.PubSub},
-      {Registry, keys: :unique, name: Backend.DocRegistry},
       {DynamicSupervisor, name: Backend.DocSupervisor, strategy: :one_for_one},
       Backend.Jido,
       BackendWeb.Endpoint
