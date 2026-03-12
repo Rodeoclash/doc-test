@@ -8,7 +8,7 @@ defmodule Backend.Repo.Migrations.CreateDocumentVersions do
       add :major_version, :integer, null: false
       add :minor_version, :integer, null: false
       add :published_at, :utc_datetime, null: false
-      add :published_by_user_id, references(:users)
+      add :published_by_user_id, references(:users), null: false
 
       timestamps(type: :utc_datetime)
     end
