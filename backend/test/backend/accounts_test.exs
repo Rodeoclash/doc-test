@@ -3,6 +3,7 @@ defmodule Backend.AccountsTest do
 
   import Backend.AccountsFixtures
   import Backend.Factory
+  import Ecto.Query
 
   alias Backend.Accounts
   alias Backend.Accounts.User
@@ -386,7 +387,8 @@ defmodule Backend.AccountsTest do
 
     test "raises when unconfirmed user has password set" do
       user = unconfirmed_user_fixture()
-      {1, nil} = Repo.update_all(User, set: [hashed_password: "hashed"])
+      # Bypass changeset to force an invalid state (password on unconfirmed user)
+      {1, nil} = Repo.update_all(from(u in User, where: u.id == ^user.id), set: [hashed_password: "hashed"])
       {encoded_token, _hashed_token} = generate_user_magic_link_token(user)
 
       assert_raise RuntimeError, ~r/magic link log in is not allowed/, fn ->
