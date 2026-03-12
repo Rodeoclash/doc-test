@@ -3,7 +3,7 @@ defmodule Backend.Repo.Migrations.CreateDocuments do
 
   def change do
     create table(:documents) do
-      add :name, :string
+      add :name, :string, null: false
       add :yjs_state, :binary
       add :status, :string, null: false, default: "draft"
       add :major_version, :integer, null: false, default: 0

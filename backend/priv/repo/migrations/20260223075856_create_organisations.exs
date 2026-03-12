@@ -3,7 +3,7 @@ defmodule Backend.Repo.Migrations.CreateOrganisations do
 
   def change do
     create table(:organisations) do
-      add :name, :string
+      add :name, :string, null: false
 
       timestamps(type: :utc_datetime)
     end
