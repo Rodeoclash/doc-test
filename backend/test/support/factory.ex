@@ -4,6 +4,7 @@ defmodule Backend.Factory do
 
   alias Backend.Accounts.User
   alias Backend.Documents.Document
+  alias Backend.Documents.DocumentVersion
   alias Backend.Organisations.Organisation
   alias Backend.Organisations.OrganisationUser
 
@@ -31,6 +32,16 @@ defmodule Backend.Factory do
     %User{
       email: sequence(:email, &"agent#{&1}@system.local"),
       type: :agent
+    }
+  end
+
+  def document_version_factory do
+    %DocumentVersion{
+      document: build(:document),
+      yjs_state: <<0>>,
+      major_version: 1,
+      minor_version: 0,
+      published_at: DateTime.utc_now(:second)
     }
   end
 

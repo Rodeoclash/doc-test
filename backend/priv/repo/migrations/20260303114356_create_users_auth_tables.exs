@@ -21,8 +21,8 @@ defmodule Backend.Repo.Migrations.CreateUsersAuthTables do
            )
 
     create table(:organisation_users) do
-      add :user_id, references(:users, on_delete: :delete_all), null: false
-      add :organisation_id, references(:organisations, on_delete: :delete_all), null: false
+      add :user_id, references(:users), null: false
+      add :organisation_id, references(:organisations), null: false
 
       timestamps(type: :utc_datetime)
     end
@@ -30,7 +30,7 @@ defmodule Backend.Repo.Migrations.CreateUsersAuthTables do
     create unique_index(:organisation_users, [:organisation_id, :user_id])
 
     create table(:users_tokens) do
-      add :user_id, references(:users, on_delete: :delete_all), null: false
+      add :user_id, references(:users), null: false
       add :token, :binary, null: false
       add :context, :string, null: false
       add :sent_to, :string
