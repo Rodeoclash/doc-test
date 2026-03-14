@@ -17,12 +17,19 @@ defmodule BackendWeb.DocumentLive.Show do
       >
       </div>
 
-      <aside class="border-l border-gray-200 p-4 h-dvh flex flex-col">
-        <div class="mt-auto">
-          <div class="font-bold mb-2">AI agent chat</div>
-          <p class="text-sm text-gray-500">Chat with the AI agent about this document.</p>
-        </div>
-      </aside>
+      {live_render(@socket, BackendWeb.ChatLive.Sidebar,
+        id: "chat-sidebar",
+        session: %{
+          "organisation_id" => @organisation.id,
+          "user_id" => @current_scope.user.id,
+          "context" => %{
+            "type" => "document",
+            "id" => to_string(@document.id),
+            "title" => @document.name,
+            "action" => "editing"
+          }
+        }
+      )}
     </div>
     """
   end
