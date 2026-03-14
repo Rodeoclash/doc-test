@@ -96,6 +96,55 @@ defmodule Backend.ConversationsTest do
     end
   end
 
+  describe "messages_for_api/1" do
+    test "formats messages as XML for the Claude API" do
+      conversation = insert(:conversation)
+
+      Conversations.add_message(conversation.id, %{role: :user, content: "Hello"})
+      Conversations.add_message(conversation.id, %{role: :assistant, content: "Hi there"})
+
+      assert {:ok, messages} = Conversations.messages_for_api(conversation.id)
+
+      assert [first, second] = messages
+      assert first.role == "user"
+      assert first.content =~ "<content>Hello</content>"
+      assert second.role == "assistant"
+      assert second.content =~ "<content>Hi there</content>"
+    end
+
+    test "includes page context in XML" do
+      conversation = insert(:conversation)
+
+      Conversations.add_message(conversation.id, %{
+        role: :user,
+        content: "Rewrite the intro",
+        page_context: %{"type" => "document", "title" => "Compliance Policy", "action" => "editing"}
+      })
+
+      assert {:ok, [message]} = Conversations.messages_for_api(conversation.id)
+
+      assert message.content =~ "<content>Rewrite the intro</content>"
+      assert message.content =~ ~s(type="document")
+      assert message.content =~ ~s(action="editing")
+      assert message.content =~ ~s(title="Compliance Policy")
+    end
+
+    test "omits context element when page context is nil" do
+      conversation = insert(:conversation)
+
+      Conversations.add_message(conversation.id, %{role: :user, content: "Hello"})
+
+      assert {:ok, [message]} = Conversations.messages_for_api(conversation.id)
+
+      refute message.content =~ "<context"
+      assert message.content =~ "<content>Hello</content>"
+    end
+
+    test "returns error for non-existent conversation" do
+      assert {:error, :not_found} = Conversations.messages_for_api(0)
+    end
+  end
+
   describe "list_conversations/2" do
     test "returns conversations for the given organisation and user" do
       org = insert(:organisation)

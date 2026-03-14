@@ -5,6 +5,7 @@ defmodule Backend.Conversations do
 
   alias Backend.Conversations.Conversation
   alias Backend.Conversations.Message
+  alias Backend.Conversations.MessageFormat
   alias Backend.Repo
 
   def create_conversation(organisation_id, user_id, attrs \\ %{}) do
@@ -30,5 +31,21 @@ defmodule Backend.Conversations do
     %Message{}
     |> Message.changeset(Map.put(attrs, :conversation_id, conversation_id))
     |> Repo.insert()
+  end
+
+  def messages_for_api(conversation_id) do
+    case get_conversation(conversation_id) do
+      nil ->
+        {:error, :not_found}
+
+      conversation ->
+        messages =
+          Enum.map(conversation.messages, fn message ->
+            content = MessageFormat.encode(message.content, message.page_context)
+            %{role: to_string(message.role), content: content}
+          end)
+
+        {:ok, messages}
+    end
   end
 end
