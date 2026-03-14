@@ -20,6 +20,12 @@ defmodule Backend.Conversations do
     |> Repo.all()
   end
 
+  def get_conversation(id) do
+    Conversation
+    |> Repo.get(id)
+    |> Repo.preload(messages: from(m in Message, order_by: m.inserted_at))
+  end
+
   def add_message(conversation_id, attrs) do
     %Message{}
     |> Message.changeset(Map.put(attrs, :conversation_id, conversation_id))

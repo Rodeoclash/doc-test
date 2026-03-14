@@ -66,6 +66,36 @@ defmodule Backend.ConversationsTest do
     end
   end
 
+  describe "get_conversation/1" do
+    test "returns the conversation with messages preloaded" do
+      conversation = insert(:conversation)
+
+      {:ok, _} = Conversations.add_message(conversation.id, %{role: :user, content: "Hello"})
+      {:ok, _} = Conversations.add_message(conversation.id, %{role: :assistant, content: "Hi there"})
+
+      result = Conversations.get_conversation(conversation.id)
+
+      assert result.id == conversation.id
+      assert length(result.messages) == 2
+      assert Enum.map(result.messages, & &1.content) == ["Hello", "Hi there"]
+    end
+
+    test "returns messages in chronological order" do
+      conversation = insert(:conversation)
+
+      insert(:message, conversation: conversation, content: "First", inserted_at: ~U[2026-03-01 10:00:00Z])
+      insert(:message, conversation: conversation, content: "Second", inserted_at: ~U[2026-03-02 10:00:00Z])
+
+      result = Conversations.get_conversation(conversation.id)
+
+      assert Enum.map(result.messages, & &1.content) == ["First", "Second"]
+    end
+
+    test "returns nil for non-existent conversation" do
+      assert Conversations.get_conversation(0) == nil
+    end
+  end
+
   describe "list_conversations/2" do
     test "returns conversations for the given organisation and user" do
       org = insert(:organisation)
