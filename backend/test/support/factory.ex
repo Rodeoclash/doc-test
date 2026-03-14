@@ -40,6 +40,7 @@ defmodule Backend.Factory do
   def document_version_factory do
     %DocumentVersion{
       document: build(:document),
+      published_by_user: build(:user),
       yjs_state: <<0>>,
       major_version: 1,
       minor_version: 0,
