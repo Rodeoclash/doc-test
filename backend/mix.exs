@@ -69,6 +69,7 @@ defmodule Backend.MixProject do
       {:phoenix, "~> 1.8.3"},
       {:postgrex, ">= 0.0.0"},
       {:req, "~> 0.5"},
+      {:saxy, "~> 1.6"},
       {:styler, "~> 1.11", only: [:dev, :test], runtime: false},
       {:swoosh, "~> 1.16"},
       {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
