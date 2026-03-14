@@ -28,7 +28,12 @@ defmodule Backend.Documents.Document do
     change(document, status: :published)
   end
 
-  def draft_changeset(document) do
-    change(document, status: :draft)
+  def draft_changeset(document, attrs) do
+    document
+    |> cast(attrs, [:major_version, :minor_version])
+    |> validate_required([:major_version, :minor_version])
+    |> validate_number(:major_version, greater_than_or_equal_to: 0)
+    |> validate_number(:minor_version, greater_than_or_equal_to: 0)
+    |> put_change(:status, :draft)
   end
 end

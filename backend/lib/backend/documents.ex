@@ -69,4 +69,22 @@ defmodule Backend.Documents do
       end
     end)
   end
+
+  @doc """
+  Starts a new draft from a published document, setting the version number
+  for the upcoming draft.
+
+  Returns `{:error, :not_published}` if the document is already a draft.
+  """
+  def start_new_draft(document_id, %{major_version: major, minor_version: minor}) do
+    document = Repo.get!(Document, document_id)
+
+    if document.status == :published do
+      document
+      |> Document.draft_changeset(%{major_version: major, minor_version: minor})
+      |> Repo.update()
+    else
+      {:error, :not_published}
+    end
+  end
 end

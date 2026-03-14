@@ -68,4 +68,22 @@ defmodule Backend.DocumentsTest do
       assert %{yjs_state: ["can't be blank"]} = errors_on(changeset)
     end
   end
+
+  describe "start_new_draft/2" do
+    test "transitions a published document to draft with a new version" do
+      document = insert(:document, status: :published, major_version: 1, minor_version: 0)
+
+      assert {:ok, draft} = Documents.start_new_draft(document.id, %{major_version: 1, minor_version: 1})
+
+      assert draft.status == :draft
+      assert draft.major_version == 1
+      assert draft.minor_version == 1
+    end
+
+    test "returns error when document is already a draft" do
+      document = insert(:document, status: :draft)
+
+      assert {:error, :not_published} = Documents.start_new_draft(document.id, %{major_version: 1, minor_version: 0})
+    end
+  end
 end
