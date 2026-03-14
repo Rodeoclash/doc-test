@@ -3,6 +3,8 @@ defmodule Backend.Factory do
   use ExMachina.Ecto, repo: Backend.Repo
 
   alias Backend.Accounts.User
+  alias Backend.Conversations.Conversation
+  alias Backend.Conversations.Message
   alias Backend.Documents.Document
   alias Backend.Documents.DocumentVersion
   alias Backend.Organisations.Organisation
@@ -42,6 +44,21 @@ defmodule Backend.Factory do
       major_version: 1,
       minor_version: 0,
       published_at: DateTime.utc_now(:second)
+    }
+  end
+
+  def conversation_factory do
+    %Conversation{
+      organisation: build(:organisation),
+      user: build(:user)
+    }
+  end
+
+  def message_factory do
+    %Message{
+      role: :user,
+      content: "Hello",
+      conversation: build(:conversation)
     }
   end
 
