@@ -56,7 +56,7 @@ messages
   - conversation_id
   - role: :user / :assistant
   - content: text (with inline reference markers)
-  - page_context: map (snapshot of where the user was)
+  - context: map (snapshot of where the user was)
 ```
 
 ### Agent State (working memory)

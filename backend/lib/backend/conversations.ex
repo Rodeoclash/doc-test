@@ -41,7 +41,7 @@ defmodule Backend.Conversations do
       conversation ->
         messages =
           Enum.map(conversation.messages, fn message ->
-            content = MessageFormat.encode(message.content, message.page_context)
+            content = MessageFormat.encode(message.content, message.context)
             %{role: to_string(message.role), content: content}
           end)
 

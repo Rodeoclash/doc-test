@@ -15,7 +15,7 @@ defmodule Backend.Repo.Migrations.CreateConversations do
     create table(:messages) do
       add :role, :string, null: false
       add :content, :text, null: false
-      add :page_context, :map
+      add :context, :map
       add :conversation_id, references(:conversations), null: false
 
       timestamps(type: :utc_datetime)

@@ -7,7 +7,7 @@ defmodule Backend.Conversations.Message do
   schema "messages" do
     field :role, Ecto.Enum, values: [:user, :assistant]
     field :content, :string
-    field :page_context, :map
+    field :context, :map
 
     belongs_to :conversation, Backend.Conversations.Conversation
 
@@ -16,7 +16,7 @@ defmodule Backend.Conversations.Message do
 
   def changeset(message, attrs) do
     message
-    |> cast(attrs, [:role, :content, :page_context, :conversation_id])
+    |> cast(attrs, [:role, :content, :context, :conversation_id])
     |> validate_required([:role, :content, :conversation_id])
   end
 end

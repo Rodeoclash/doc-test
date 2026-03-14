@@ -40,7 +40,7 @@ defmodule Backend.ConversationsTest do
       assert message.conversation_id == conversation.id
       assert message.role == :user
       assert message.content == "Hello"
-      assert message.page_context == nil
+      assert message.context == nil
     end
 
     test "adds a message with page context" do
@@ -50,10 +50,10 @@ defmodule Backend.ConversationsTest do
                Conversations.add_message(conversation.id, %{
                  role: :assistant,
                  content: "I can see you're on the compliance doc.",
-                 page_context: %{"type" => "document", "id" => 42}
+                 context: %{"type" => "document", "id" => 42}
                })
 
-      assert message.page_context == %{"type" => "document", "id" => 42}
+      assert message.context == %{"type" => "document", "id" => 42}
     end
 
     test "fails without content" do
@@ -118,7 +118,7 @@ defmodule Backend.ConversationsTest do
       Conversations.add_message(conversation.id, %{
         role: :user,
         content: "Rewrite the intro",
-        page_context: %{"type" => "document", "title" => "Compliance Policy", "action" => "editing"}
+        context: %{"type" => "document", "title" => "Compliance Policy", "action" => "editing"}
       })
 
       assert {:ok, [message]} = Conversations.messages_for_api(conversation.id)
