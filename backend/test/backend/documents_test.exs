@@ -90,13 +90,21 @@ defmodule Backend.DocumentsTest do
   describe "list_versions/1" do
     test "returns versions in descending order by published_at" do
       user = insert(:user)
-      document = insert(:document, yjs_state: <<1>>)
+      document = insert(:document)
 
-      {:ok, _} = Documents.publish_document(document.id, user.id)
-      {:ok, _} = Documents.start_new_draft(document.id, %{major_version: 0, minor_version: 1})
+      insert(:document_version,
+        document: document,
+        published_by_user: user,
+        minor_version: 0,
+        published_at: ~U[2026-03-01 10:00:00Z]
+      )
 
-      Documents.update_yjs_state(document.id, <<2>>)
-      {:ok, _} = Documents.publish_document(document.id, user.id)
+      insert(:document_version,
+        document: document,
+        published_by_user: user,
+        minor_version: 1,
+        published_at: ~U[2026-03-02 10:00:00Z]
+      )
 
       versions = Documents.list_versions(document.id)
 

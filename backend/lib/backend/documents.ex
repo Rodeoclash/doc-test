@@ -92,11 +92,9 @@ defmodule Backend.Documents do
   Returns all published versions for a document, most recent first.
   """
   def list_versions(document_id) do
-    # Secondary sort by id because published_at has second-level precision,
-    # so versions published in the same second need a tiebreaker.
     DocumentVersion
     |> where(document_id: ^document_id)
-    |> order_by(desc: :published_at, desc: :id)
+    |> order_by(desc: :published_at)
     |> Repo.all()
   end
 
