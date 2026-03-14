@@ -9,3 +9,7 @@ run service +cmd:
 # Connect an IEx console to the running Phoenix server
 console:
     docker compose exec backend iex --sname console --cookie dev --remsh backend
+
+# Drop, create, migrate, and seed the database
+reset-db:
+    docker compose run --rm backend sh -c "mix ecto.drop && mix ecto.setup"
