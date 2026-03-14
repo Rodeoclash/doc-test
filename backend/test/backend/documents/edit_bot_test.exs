@@ -6,6 +6,21 @@ defmodule Backend.Documents.EditBotTest do
   alias Backend.Documents.DocServer
   alias Backend.Documents.EditBot
 
+  # The Ecto sandbox connection may close before on_exit runs, causing the
+  # DocServer (and its linked sidecar) to terminate first. GenServer.stop/3
+  # then hits an already-dead process and raises, so we catch the exit.
+  defp stop_on_exit(pid) do
+    on_exit(fn ->
+      if Process.alive?(pid) do
+        try do
+          GenServer.stop(pid, :normal, 5_000)
+        catch
+          :exit, _ -> :ok
+        end
+      end
+    end)
+  end
+
   setup do
     Backend.DocSupervisor
     |> DynamicSupervisor.which_children()
@@ -23,9 +38,7 @@ defmodule Backend.Documents.EditBotTest do
       assert {:ok, pid} = EditBot.start_link(document_id: document.id)
       assert Process.alive?(pid)
 
-      on_exit(fn ->
-        if Process.alive?(pid), do: GenServer.stop(pid, :normal, 5_000)
-      end)
+      stop_on_exit(pid)
     end
 
     test "fails for a non-existent document" do
@@ -45,10 +58,7 @@ defmodule Backend.Documents.EditBotTest do
       document = insert(:document)
       insert(:organisation_user, user: insert(:agent), organisation: document.organisation)
       {:ok, pid} = EditBot.start_link(document_id: document.id)
-
-      on_exit(fn ->
-        if Process.alive?(pid), do: GenServer.stop(pid, :normal, 5_000)
-      end)
+      stop_on_exit(pid)
 
       assert :ok = EditBot.execute_command(pid, "append_hello")
 
@@ -71,10 +81,7 @@ defmodule Backend.Documents.EditBotTest do
       document = insert(:document)
       insert(:organisation_user, user: insert(:agent), organisation: document.organisation)
       {:ok, pid} = EditBot.start_link(document_id: document.id)
-
-      on_exit(fn ->
-        if Process.alive?(pid), do: GenServer.stop(pid, :normal, 5_000)
-      end)
+      stop_on_exit(pid)
 
       assert {:error, "unknown command: nonexistent"} =
                EditBot.execute_command(pid, "nonexistent")
