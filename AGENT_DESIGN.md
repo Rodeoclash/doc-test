@@ -8,14 +8,16 @@ State: `{organisation_id, user_id}` — not `{document_id}`.
 
 Each agent has a corresponding `User` record with `type: :agent`. The agent user is the **actor** recorded against actions (edits, publishes), but documents are not "owned" by agents. The agent acts on behalf of the human user who instructed it. The conversation record ties agent actions back to the human.
 
-## Page Context
+## Message Context
 
-The agent doesn't live on a specific page. Instead, the page the user is currently viewing provides **context** that gets attached to each message. Examples:
+The agent doesn't live on a specific page. Instead, the user's current situation provides **context** that gets attached to each message. This is not limited to page navigation — it could be any relevant state. Examples:
 
-- Viewing a document: `%{"type" => "document", "id" => 42}`
-- Viewing a risk: `%{"type" => "risk", "id" => "R-003"}`
+- Viewing a document: `%{"type" => "document", "id" => "42", "title" => "Compliance Policy", "action" => "viewing"}`
+- Editing a risk: `%{"type" => "risk", "id" => "R-003", "title" => "Data Breach", "action" => "editing"}`
 
-Page context is per-message, not per-conversation. Each message captures where the user was at that moment. When a user resumes an old conversation on a different page, past messages retain their original context and new messages carry the current page. Claude sees the full history and understands context shifts.
+Context is per-message, not per-conversation. Each message captures the user's situation at that moment. When a user resumes an old conversation in a different context, past messages retain their original context and new messages carry the current one. Claude sees the full history and understands context shifts.
+
+The context map always includes `type`, `id`, `title`, and `action`. The `id` is stored so tools can act on the referenced entity. The `title` is a snapshot (won't change if the entity is renamed later).
 
 ## References
 
@@ -77,15 +79,28 @@ The database stores what the user sees. The agent state stores what the agent ne
 
 Thin Elixir wrapper around the Claude API using `Req`. Calls `POST /v1/messages` with API key from application config. Supports system prompts, tools, and parses response content blocks (text and tool_use).
 
-### Tool Loop
+### Message Format (XML)
+
+Messages sent to Claude are encoded as XML via `Backend.Conversations.MessageFormat`. Each message has two top-level nodes — `<context>` (optional, carries structured metadata as attributes) and `<content>` (the user/assistant text). The UI reads raw `content` and `context` fields from the database separately; the XML encoding is only for Claude's consumption.
+
+```xml
+<message>
+  <context action="viewing" id="42" title="Compliance Policy" type="document"/>
+  <content>Check this for spelling mistakes</content>
+</message>
+```
+
+Uses `saxy` for XML building and parsing. The format round-trips cleanly (encode → decode preserves data).
+
+### Tool Loop (TODO)
 
 When Claude responds with `stop_reason: "tool_use"`, the loop executes the requested tools locally, sends results back, and repeats until Claude returns `"end_turn"`. A max iterations guard prevents runaway loops. Tools are defined as modules with a `definition/0` (JSON schema for Claude) and `execute/2` (local implementation).
 
-### System Prompt Assembly
+### System Prompt Assembly (TODO)
 
 Each API call includes a system prompt assembled from the agent's current state:
 - Organisation name
-- Current page context (from the latest message)
+- Agent identity
 - Available tool descriptions
 - Any relevant entity details
 
@@ -112,29 +127,18 @@ The agent and DocServer are decoupled. The agent calls `DocServer.execute_edit/2
 
 ## Implementation Progress
 
-### Done
+### Next
 
-- [x] EditAgent with signal routing (`document.edit` → `ExecuteEditCommand`)
-- [x] DocServer with sidecar integration (`execute_edit/2`, `:global` registry)
-- [x] Sidecar GenServer (Node.js Port for headless Lexical edits)
-- [x] Document versioning (draft/publish lifecycle, version snapshots)
-- [x] `Backend.Anthropic` module (chat function, Req-based, tested with stubs)
-- [x] Runtime config for `ANTHROPIC_API_KEY`
-- [x] Conversation + Message schemas, migration, factories
-
-### In Progress
-
-- [ ] `Backend.Conversations` context module (create, list, add message, format for API)
-
-### Remaining
-
-- [ ] `list_conversations/2` — list a user's conversations in an org
-- [ ] `get_conversation/1` — load a conversation with messages
-- [ ] `messages_for_api/1` — format messages for `Backend.Anthropic.chat/2`
 - [ ] Sidebar LiveComponent (chat UI)
-- [ ] Wire sidebar → agent → Anthropic (full request loop)
-- [ ] Tool loop in `Backend.Anthropic`
+- [ ] Wire sidebar → conversations → Anthropic (send message, display response)
+
+### Coming Back To
+
+- [ ] System prompt assembly (org name, agent identity, tool descriptions)
+- [ ] Tool loop in `Backend.Anthropic` (execute tools → feed results back → repeat)
 - [ ] Tool modules under `Backend.Anthropic.Tools`
-- [ ] System prompt assembly
+
+### Future
+
 - [ ] Tribute.js integration for inline references
 - [ ] Document versioning steps 3-7 (DocServer gating, channel changes, LiveView, editor UI)
