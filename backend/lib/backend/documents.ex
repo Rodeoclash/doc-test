@@ -87,4 +87,23 @@ defmodule Backend.Documents do
       {:error, :not_published}
     end
   end
+
+  @doc """
+  Returns all published versions for a document, most recent first.
+  """
+  def list_versions(document_id) do
+    # Secondary sort by id because published_at has second-level precision,
+    # so versions published in the same second need a tiebreaker.
+    DocumentVersion
+    |> where(document_id: ^document_id)
+    |> order_by(desc: :published_at, desc: :id)
+    |> Repo.all()
+  end
+
+  @doc """
+  Fetches a specific version by document, major, and minor version number.
+  """
+  def get_version(document_id, major, minor) do
+    Repo.get_by(DocumentVersion, document_id: document_id, major_version: major, minor_version: minor)
+  end
 end

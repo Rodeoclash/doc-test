@@ -86,4 +86,50 @@ defmodule Backend.DocumentsTest do
       assert {:error, :not_published} = Documents.start_new_draft(document.id, %{major_version: 1, minor_version: 0})
     end
   end
+
+  describe "list_versions/1" do
+    test "returns versions in descending order by published_at" do
+      user = insert(:user)
+      document = insert(:document, yjs_state: <<1>>)
+
+      {:ok, _} = Documents.publish_document(document.id, user.id)
+      {:ok, _} = Documents.start_new_draft(document.id, %{major_version: 0, minor_version: 1})
+
+      Documents.update_yjs_state(document.id, <<2>>)
+      {:ok, _} = Documents.publish_document(document.id, user.id)
+
+      versions = Documents.list_versions(document.id)
+
+      assert length(versions) == 2
+      assert Enum.at(versions, 0).minor_version == 1
+      assert Enum.at(versions, 1).minor_version == 0
+    end
+
+    test "returns empty list when no versions exist" do
+      document = insert(:document)
+
+      assert Documents.list_versions(document.id) == []
+    end
+  end
+
+  describe "get_version/3" do
+    test "returns the version matching document, major, and minor" do
+      user = insert(:user)
+      document = insert(:document, yjs_state: <<1>>)
+
+      {:ok, _} = Documents.publish_document(document.id, user.id)
+
+      version = Documents.get_version(document.id, 0, 0)
+
+      assert version.document_id == document.id
+      assert version.major_version == 0
+      assert version.minor_version == 0
+    end
+
+    test "returns nil when version does not exist" do
+      document = insert(:document)
+
+      assert Documents.get_version(document.id, 99, 99) == nil
+    end
+  end
 end
