@@ -30,6 +30,89 @@ defmodule BackendWeb.ChatLive.SidebarTest do
     end
   end
 
+  describe "sending messages" do
+    test "user message appears in the chat", ctx do
+      {_view, sidebar} = open_sidebar(ctx)
+
+      Req.Test.stub(:anthropic, fn conn ->
+        Req.Test.json(conn, %{
+          "content" => [%{"type" => "text", "text" => "Hi"}],
+          "stop_reason" => "end_turn",
+          "usage" => %{"input_tokens" => 10, "output_tokens" => 5}
+        })
+      end)
+
+      sidebar
+      |> element("form")
+      |> render_submit(%{"content" => "Hello there"})
+
+      html = render(sidebar)
+      assert html =~ "Hello there"
+      refute html =~ "Send a message to get started."
+    end
+
+    test "shows loading state while waiting for response", ctx do
+      {_view, sidebar} = open_sidebar(ctx)
+
+      # Stub that sleeps to keep the task in flight
+      Req.Test.stub(:anthropic, fn conn ->
+        Process.sleep(500)
+
+        Req.Test.json(conn, %{
+          "content" => [%{"type" => "text", "text" => "Hi"}],
+          "stop_reason" => "end_turn",
+          "usage" => %{"input_tokens" => 10, "output_tokens" => 5}
+        })
+      end)
+
+      sidebar
+      |> element("form")
+      |> render_submit(%{"content" => "Hello"})
+
+      # Immediately after submit, loading state should be visible
+      html = render(sidebar)
+      assert html =~ "Thinking..."
+      assert html =~ "disabled"
+
+      # After the task completes, loading state should clear
+      assert_eventually(fn ->
+        html = render(sidebar)
+        html =~ "Hi" && not (html =~ "Thinking...")
+      end)
+    end
+
+    test "displays Claude response after sending a message", ctx do
+      {_view, sidebar} = open_sidebar(ctx)
+
+      Req.Test.stub(:anthropic, fn conn ->
+        Req.Test.json(conn, %{
+          "content" => [%{"type" => "text", "text" => "Hello! How can I help?"}],
+          "stop_reason" => "end_turn",
+          "usage" => %{"input_tokens" => 10, "output_tokens" => 8}
+        })
+      end)
+
+      sidebar
+      |> element("form")
+      |> render_submit(%{"content" => "Hi there"})
+
+      assert_eventually(fn ->
+        html = render(sidebar)
+        html =~ "Hi there" && html =~ "Hello! How can I help?"
+      end)
+    end
+
+    test "empty message does nothing", ctx do
+      {_view, sidebar} = open_sidebar(ctx)
+
+      sidebar
+      |> element("form")
+      |> render_submit(%{"content" => ""})
+
+      assert render(sidebar) =~ "Send a message to get started."
+    end
+  end
+
   describe "error handling" do
     test "shows error when API call fails", ctx do
       {_view, sidebar} = open_sidebar(ctx)
