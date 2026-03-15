@@ -3,19 +3,19 @@ defmodule BackendWeb.ChatLive.Sidebar do
   use BackendWeb, :live_view
 
   alias Backend.Conversations
+  alias Backend.OrganisationUsers
 
   @impl true
   def mount(_params, session, socket) do
-    organisation_id = session["organisation_id"]
-    user_id = session["user_id"]
+    organisation_user = OrganisationUsers.get(session["organisation_user_id"])
     context = session["context"]
 
-    conversation = load_or_create_conversation(organisation_id, user_id)
+    conversation =
+      load_or_create_conversation(organisation_user.organisation_id, organisation_user.user_id)
 
     {:ok,
      assign(socket,
-       organisation_id: organisation_id,
-       user_id: user_id,
+       organisation_user: organisation_user,
        context: context,
        conversation: conversation
      )}

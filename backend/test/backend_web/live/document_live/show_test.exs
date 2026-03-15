@@ -7,8 +7,9 @@ defmodule BackendWeb.DocumentLive.ShowTest do
   setup :register_and_log_in_user
 
   describe "Show" do
-    test "renders the editor for a valid document", %{conn: conn} do
+    test "renders the editor for a valid document", %{conn: conn, user: user} do
       organisation = insert(:organisation)
+      insert(:organisation_user, organisation: organisation, user: user)
       document = insert(:document, organisation: organisation)
 
       {:ok, _view, html} =

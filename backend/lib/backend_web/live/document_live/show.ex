@@ -20,8 +20,7 @@ defmodule BackendWeb.DocumentLive.Show do
       {live_render(@socket, BackendWeb.ChatLive.Sidebar,
         id: "chat-sidebar",
         session: %{
-          "organisation_id" => @organisation.id,
-          "user_id" => @current_scope.user.id,
+          "organisation_user_id" => @organisation_user.id,
           "context" => %{
             "type" => "document",
             "id" => to_string(@document.id),

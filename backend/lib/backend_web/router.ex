@@ -59,7 +59,7 @@ defmodule BackendWeb.Router do
     live_session :organisation,
       on_mount: [
         {BackendWeb.UserAuth, :require_authenticated},
-        {BackendWeb.OrganisationHooks, :default}
+        {BackendWeb.OrganisationUserHooks, :default}
       ],
       layout: {BackendWeb.Layouts, :organisation} do
     end
@@ -67,7 +67,7 @@ defmodule BackendWeb.Router do
     live_session :document,
       on_mount: [
         {BackendWeb.UserAuth, :require_authenticated},
-        {BackendWeb.OrganisationHooks, :default},
+        {BackendWeb.OrganisationUserHooks, :default},
         {BackendWeb.DocumentHooks, :default}
       ],
       layout: {BackendWeb.Layouts, :organisation} do
