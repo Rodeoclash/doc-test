@@ -52,6 +52,7 @@ defmodule Backend.MixProject do
       {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
       {:bandit, "~> 1.5"},
       {:dns_cluster, "~> 0.2.0"},
+      {:earmark, "~> 1.4"},
       {:ex_machina, "~> 2.8.0", only: :test},
       {:excoveralls, "~> 0.18", only: :test},
       {:gettext, "~> 0.26"},
