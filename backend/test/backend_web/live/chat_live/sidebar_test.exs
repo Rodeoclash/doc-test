@@ -22,6 +22,14 @@ defmodule BackendWeb.ChatLive.SidebarTest do
     {view, sidebar}
   end
 
+  describe "empty state" do
+    test "shows empty state when no messages exist", ctx do
+      {_view, sidebar} = open_sidebar(ctx)
+
+      assert render(sidebar) =~ "Send a message to get started."
+    end
+  end
+
   describe "error handling" do
     test "shows error when API call fails", ctx do
       {_view, sidebar} = open_sidebar(ctx)
