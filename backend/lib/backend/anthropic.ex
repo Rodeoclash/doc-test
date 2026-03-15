@@ -66,6 +66,7 @@ defmodule Backend.Anthropic do
         {"anthropic-version", @api_version}
       ]
     ]
+    |> Keyword.merge(Application.get_env(:backend, :anthropic_req_options, []))
     |> Keyword.merge(opts[:req_options] || [])
     |> Req.new()
   end

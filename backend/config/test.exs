@@ -24,6 +24,7 @@ config :backend, BackendWeb.Endpoint,
   server: false
 
 config :backend, :anthropic_api_key, "sk-ant-test-dummy"
+config :backend, :anthropic_req_options, plug: {Req.Test, :anthropic}
 
 # Only in tests, remove the complexity from the password hashing algorithm
 config :bcrypt_elixir, :log_rounds, 1
