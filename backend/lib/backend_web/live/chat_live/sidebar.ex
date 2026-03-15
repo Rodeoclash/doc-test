@@ -3,6 +3,7 @@ defmodule BackendWeb.ChatLive.Sidebar do
   use BackendWeb, :live_view
 
   alias Backend.Anthropic
+  alias Backend.Anthropic.SystemPrompt
   alias Backend.Conversations
   alias Backend.OrganisationUsers
   alias BackendWeb.Helpers.Markdown
@@ -34,9 +35,12 @@ defmodule BackendWeb.ChatLive.Sidebar do
     {:ok, _message} =
       Conversations.add_message(conversation_id, %{role: :user, content: content})
 
+    organisation_name = socket.assigns.organisation_user.organisation.name
+    system_prompt = SystemPrompt.build(organisation_name: organisation_name)
+
     Task.async(fn ->
       {:ok, api_messages} = Conversations.messages_for_api(conversation_id)
-      Anthropic.chat(api_messages)
+      Anthropic.chat(api_messages, system: system_prompt)
     end)
 
     {:noreply, socket |> assign(loading: true, error: nil) |> reload_conversation()}
