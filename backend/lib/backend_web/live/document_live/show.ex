@@ -8,7 +8,7 @@ defmodule BackendWeb.DocumentLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="grid grid-cols-[1fr_20rem] h-full">
+    <div class="grid grid-cols-[1fr_minmax(20rem,25%)] h-full">
       <div
         id="editor"
         phx-hook="Editor"
