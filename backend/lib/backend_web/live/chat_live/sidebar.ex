@@ -2,6 +2,7 @@ defmodule BackendWeb.ChatLive.Sidebar do
   @moduledoc false
   use BackendWeb, :live_view
 
+  alias Backend.Anthropic
   alias Backend.Conversations
   alias Backend.OrganisationUsers
 
@@ -17,23 +18,53 @@ defmodule BackendWeb.ChatLive.Sidebar do
      assign(socket,
        organisation_user: organisation_user,
        context: context,
-       conversation: conversation
+       conversation: conversation,
+       loading: false
      )}
   end
 
   @impl true
   def handle_event("send_message", %{"content" => content}, socket) when content != "" do
-    {:ok, _message} =
-      Conversations.add_message(socket.assigns.conversation.id, %{
-        role: :user,
-        content: content,
-        context: socket.assigns.context
-      })
+    conversation_id = socket.assigns.conversation.id
 
-    {:noreply, reload_conversation(socket)}
+    {:ok, _message} =
+      Conversations.add_message(conversation_id, %{role: :user, content: content})
+
+    Task.async(fn ->
+      {:ok, api_messages} = Conversations.messages_for_api(conversation_id)
+      Anthropic.chat(api_messages)
+    end)
+
+    {:noreply, socket |> assign(:loading, true) |> reload_conversation()}
   end
 
   def handle_event("send_message", _params, socket), do: {:noreply, socket}
+
+  @impl true
+  def handle_info({ref, {:ok, response}}, socket) do
+    Process.demonitor(ref, [:flush])
+
+    text =
+      response.content
+      |> Enum.filter(&(&1.type == :text))
+      |> Enum.map_join("\n", & &1.text)
+
+    Conversations.add_message(socket.assigns.conversation.id, %{
+      role: :assistant,
+      content: text
+    })
+
+    {:noreply, socket |> assign(:loading, false) |> reload_conversation()}
+  end
+
+  def handle_info({ref, {:error, _reason}}, socket) do
+    Process.demonitor(ref, [:flush])
+    {:noreply, assign(socket, :loading, false)}
+  end
+
+  def handle_info({:DOWN, _ref, :process, _pid, _reason}, socket) do
+    {:noreply, assign(socket, :loading, false)}
+  end
 
   defp load_or_create_conversation(organisation_id, user_id) do
     case Conversations.list_conversations(organisation_id, user_id) do
