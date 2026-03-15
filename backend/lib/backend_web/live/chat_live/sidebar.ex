@@ -5,6 +5,7 @@ defmodule BackendWeb.ChatLive.Sidebar do
   alias Backend.Anthropic
   alias Backend.Conversations
   alias Backend.OrganisationUsers
+  alias BackendWeb.Helpers.Markdown
 
   require Logger
 

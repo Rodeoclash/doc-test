@@ -17,13 +17,13 @@
       id={"message-#{message.id}"}
     >
       <div class={[
-        "text-sm rounded-lg px-3 py-2 max-w-[85%]",
+        "text-sm rounded-lg px-3 py-2 max-w-[85%] prose prose-sm",
         if(message.role == :user,
           do: "bg-blue-100 text-blue-900 self-end",
           else: "bg-gray-100 text-gray-900 self-start"
         )
       ]}>
-        {message.content}
+        {Markdown.to_html(message.content)}
       </div>
     </div>
 
