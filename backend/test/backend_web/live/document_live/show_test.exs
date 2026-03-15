@@ -17,6 +17,7 @@ defmodule BackendWeb.DocumentLive.ShowTest do
 
       assert html =~ ~s(id="editor")
       assert html =~ ~s(data-document-id="#{document.id}")
+      assert html =~ "Send a message to get started."
     end
 
     test "raises when document does not exist", %{conn: conn} do
