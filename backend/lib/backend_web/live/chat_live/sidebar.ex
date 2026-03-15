@@ -6,6 +6,8 @@ defmodule BackendWeb.ChatLive.Sidebar do
   alias Backend.Conversations
   alias Backend.OrganisationUsers
 
+  require Logger
+
   @impl true
   def mount(_params, session, socket) do
     organisation_user = OrganisationUsers.get(session["organisation_user_id"])
@@ -19,7 +21,8 @@ defmodule BackendWeb.ChatLive.Sidebar do
        organisation_user: organisation_user,
        context: context,
        conversation: conversation,
-       loading: false
+       loading: false,
+       error: nil
      )}
   end
 
@@ -35,7 +38,7 @@ defmodule BackendWeb.ChatLive.Sidebar do
       Anthropic.chat(api_messages)
     end)
 
-    {:noreply, socket |> assign(:loading, true) |> reload_conversation()}
+    {:noreply, socket |> assign(loading: true, error: nil) |> reload_conversation()}
   end
 
   def handle_event("send_message", _params, socket), do: {:noreply, socket}
@@ -57,13 +60,15 @@ defmodule BackendWeb.ChatLive.Sidebar do
     {:noreply, socket |> assign(:loading, false) |> reload_conversation()}
   end
 
-  def handle_info({ref, {:error, _reason}}, socket) do
+  def handle_info({ref, {:error, reason}}, socket) do
     Process.demonitor(ref, [:flush])
-    {:noreply, assign(socket, :loading, false)}
+    Logger.error("Claude API error: #{inspect(reason)}")
+    {:noreply, assign(socket, loading: false, error: "Something went wrong. Please try again.")}
   end
 
-  def handle_info({:DOWN, _ref, :process, _pid, _reason}, socket) do
-    {:noreply, assign(socket, :loading, false)}
+  def handle_info({:DOWN, _ref, :process, _pid, reason}, socket) do
+    Logger.error("Chat task crashed: #{inspect(reason)}")
+    {:noreply, assign(socket, loading: false, error: "Something went wrong. Please try again.")}
   end
 
   defp load_or_create_conversation(organisation_id, user_id) do
