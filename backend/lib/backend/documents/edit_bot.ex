@@ -75,7 +75,7 @@ defmodule Backend.Documents.EditBot do
 
   def handle_info({port, {:data, data}}, %{port: port} = state) do
     case Jason.decode!(data) do
-      %{"ok" => true, "update" => update_b64} ->
+      %{"ok" => true, "type" => "command", "update" => update_b64} ->
         update = Base.decode64!(update_b64)
         DocServer.apply_update(state.doc_server, update)
 

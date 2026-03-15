@@ -4,6 +4,7 @@ import {
   $getRoot,
   createEditor,
   type LexicalEditor,
+  type SerializedEditorState,
 } from "lexical";
 import {
   createBinding,
@@ -33,7 +34,7 @@ function createNoopProvider() {
   };
 }
 
-// --- Command handlers ---
+// --- Command handlers (mutate the document, return Yjs update + data) ---
 
 const commands: Record<string, (editor: LexicalEditor) => void> = {
   append_hello(editor) {
@@ -49,6 +50,14 @@ const commands: Record<string, (editor: LexicalEditor) => void> = {
   },
 };
 
+// --- Query handlers (read-only, return data) ---
+
+const queries: Record<string, (editor: LexicalEditor) => unknown> = {
+  read_document(editor) {
+    return editor.getEditorState().toJSON();
+  },
+};
+
 // --- Core edit pipeline ---
 
 interface CommandRequest {
@@ -56,20 +65,12 @@ interface CommandRequest {
   state: string;
 }
 
-interface CommandResponse {
-  ok: boolean;
-  update?: string;
-  error?: string;
-}
+type CommandResponse =
+  | { ok: true; type: "command"; update: string; data: SerializedEditorState }
+  | { ok: true; type: "query"; data: SerializedEditorState }
+  | { ok: false; error: string };
 
-function processCommand(request: CommandRequest): CommandResponse {
-  const { command, state: stateBase64 } = request;
-
-  const handler = commands[command];
-  if (!handler) {
-    return { ok: false, error: `unknown command: ${command}` };
-  }
-
+function loadEditor(stateBase64: string) {
   const stateBytes = base64ToUint8Array(stateBase64);
 
   // Create Y.Doc and load the current document state
@@ -77,12 +78,6 @@ function processCommand(request: CommandRequest): CommandResponse {
   doc.transact(() => {
     Y.applyUpdate(doc, stateBytes);
   }, "load");
-
-  // Capture updates produced by our edit (after initial load)
-  const updates: Uint8Array[] = [];
-  doc.on("update", (update: Uint8Array) => {
-    updates.push(update);
-  });
 
   // Create a headless editor (no setRootElement — avoids DOM reconciliation)
   const editor = createEditor({
@@ -108,44 +103,71 @@ function processCommand(request: CommandRequest): CommandResponse {
     { tag: "collaboration", discrete: true },
   );
 
-  // Wire Lexical -> Yjs sync via the update listener
-  const removeUpdateListener = editor.registerUpdateListener(
-    ({
-      prevEditorState,
-      editorState,
-      dirtyElements,
-      dirtyLeaves,
-      normalizedNodes,
-      tags,
-    }) => {
-      if (tags.has("collaboration") || tags.has("historic")) {
-        return;
-      }
-      syncLexicalUpdateToYjs(
-        binding,
-        provider,
+  return { editor, doc, binding, provider };
+}
+
+function processCommand(request: CommandRequest): CommandResponse {
+  const { command, state: stateBase64 } = request;
+
+  const queryHandler = queries[command];
+  if (queryHandler) {
+    const { editor } = loadEditor(stateBase64);
+    const data = queryHandler(editor);
+    return { ok: true, type: "query", data };
+  }
+
+  const commandHandler = commands[command];
+  if (commandHandler) {
+    const { editor, doc, binding, provider } = loadEditor(stateBase64);
+
+    // Capture updates produced by our edit (after initial load)
+    const updates: Uint8Array[] = [];
+    doc.on("update", (update: Uint8Array) => {
+      updates.push(update);
+    });
+
+    // Wire Lexical -> Yjs sync via the update listener
+    const removeUpdateListener = editor.registerUpdateListener(
+      ({
         prevEditorState,
         editorState,
         dirtyElements,
         dirtyLeaves,
         normalizedNodes,
         tags,
-      );
-    },
-  );
+      }) => {
+        if (tags.has("collaboration") || tags.has("historic")) {
+          return;
+        }
+        syncLexicalUpdateToYjs(
+          binding,
+          provider,
+          prevEditorState,
+          editorState,
+          dirtyElements,
+          dirtyLeaves,
+          normalizedNodes,
+          tags,
+        );
+      },
+    );
 
-  // Execute the requested edit
-  handler(editor);
+    // Execute the requested edit
+    commandHandler(editor);
 
-  // Clean up
-  removeUpdateListener();
+    // Clean up
+    removeUpdateListener();
 
-  if (updates.length === 0) {
-    return { ok: false, error: "no updates produced" };
+    if (updates.length === 0) {
+      return { ok: false, error: "no updates produced" };
+    }
+
+    const merged = Y.mergeUpdates(updates);
+    const data = editor.getEditorState().toJSON();
+    return { ok: true, type: "command", update: uint8ArrayToBase64(merged), data };
   }
 
-  const merged = Y.mergeUpdates(updates);
-  return { ok: true, update: uint8ArrayToBase64(merged) };
+  return { ok: false, error: `unknown command: ${command}` };
 }
 
 // --- stdin/stdout framing ({:packet, 4}) ---

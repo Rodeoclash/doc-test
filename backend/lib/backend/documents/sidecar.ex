@@ -44,17 +44,21 @@ defmodule Backend.Documents.Sidecar do
 
   @impl true
   def handle_info({port, {:data, data}}, %{port: port} = state) do
-    case Jason.decode!(data) do
-      %{"ok" => true, "update" => update_b64} ->
-        update = Base.decode64!(update_b64)
-        GenServer.reply(state.pending_caller, {:ok, update})
-        {:noreply, %{state | pending_caller: nil}}
+    result =
+      case Jason.decode!(data) do
+        %{"ok" => true, "type" => "command", "update" => update_b64, "data" => doc_data} ->
+          {:ok, %{type: :command, update: Base.decode64!(update_b64), data: doc_data}}
 
-      %{"ok" => false, "error" => error} ->
-        Logger.error("Sidecar error: #{error}")
-        GenServer.reply(state.pending_caller, {:error, error})
-        {:noreply, %{state | pending_caller: nil}}
-    end
+        %{"ok" => true, "type" => "query", "data" => doc_data} ->
+          {:ok, %{type: :query, data: doc_data}}
+
+        %{"ok" => false, "error" => error} ->
+          Logger.error("Sidecar error: #{error}")
+          {:error, error}
+      end
+
+    GenServer.reply(state.pending_caller, result)
+    {:noreply, %{state | pending_caller: nil}}
   end
 
   def handle_info({port, {:exit_status, code}}, %{port: port} = state) do

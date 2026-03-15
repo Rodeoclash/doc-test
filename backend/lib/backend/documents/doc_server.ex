@@ -7,6 +7,8 @@ defmodule Backend.Documents.DocServer do
 
   require Logger
 
+  @sidecar_timeout 30_000
+
   # Public API
 
   @doc """
@@ -27,8 +29,15 @@ defmodule Backend.Documents.DocServer do
   Executes an edit command via the sidecar. Lazily starts the sidecar on first use.
   Gets current state, sends to sidecar, applies the resulting update.
   """
-  def execute_edit(doc_server, command) do
-    GenServer.call(doc_server, {:execute_edit, command}, 30_000)
+  def execute_command(doc_server, command) do
+    GenServer.call(doc_server, {:execute_command, command}, @sidecar_timeout)
+  end
+
+  @doc """
+  Executes a read-only query via the sidecar. Returns the Lexical editor state as JSON.
+  """
+  def execute_query(doc_server, query) do
+    GenServer.call(doc_server, {:execute_query, query}, @sidecar_timeout)
   end
 
   @doc """
@@ -70,14 +79,27 @@ defmodule Backend.Documents.DocServer do
     {:reply, :ok, state}
   end
 
-  def handle_call({:execute_edit, command}, _from, state) do
+  def handle_call({:execute_command, command}, _from, state) do
     {:ok, state} = ensure_sidecar(state)
     encoded_state = Yex.encode_state_as_update(state.doc)
 
     case Sidecar.execute(state.sidecar, command, encoded_state) do
-      {:ok, update} ->
+      {:ok, %{type: :command, update: update, data: data}} ->
         Yex.apply_update(state.doc, update)
-        {:reply, :ok, state}
+        {:reply, {:ok, data}, state}
+
+      {:error, reason} ->
+        {:reply, {:error, reason}, state}
+    end
+  end
+
+  def handle_call({:execute_query, query}, _from, state) do
+    {:ok, state} = ensure_sidecar(state)
+    encoded_state = Yex.encode_state_as_update(state.doc)
+
+    case Sidecar.execute(state.sidecar, query, encoded_state) do
+      {:ok, %{type: :query, data: data}} ->
+        {:reply, {:ok, data}, state}
 
       {:error, reason} ->
         {:reply, {:error, reason}, state}
