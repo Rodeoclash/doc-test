@@ -2,13 +2,14 @@ import {
   $createParagraphNode,
   $createTextNode,
   $getRoot,
-  createEditor,
   type LexicalEditor,
   type SerializedEditorState,
 } from "lexical";
+import { createHeadlessEditor } from "@lexical/headless";
 import {
   createBinding,
   syncLexicalUpdateToYjs,
+  syncYjsChangesToLexical,
 } from "@lexical/yjs";
 import * as Y from "yjs";
 
@@ -32,6 +33,45 @@ function createNoopProvider() {
     on: () => {},
     off: () => {},
   };
+}
+
+// --- Headless editor with Yjs binding ---
+
+function loadEditor(stateBase64: string) {
+  const stateBytes = base64ToUint8Array(stateBase64);
+
+  const doc = new Y.Doc();
+
+  const editor = createHeadlessEditor({
+    namespace: "sidecar",
+    nodes: [ChangeInsertNode, ChangeDeleteNode],
+    onError: (error: Error) => {
+      throw error;
+    },
+  });
+
+  const docMap = new Map([["root", doc]]);
+  const provider = createNoopProvider();
+  const binding = createBinding(editor, provider, "root", doc, docMap);
+
+  // Wire Yjs -> Lexical sync via observer (same as CollaborationPlugin)
+  binding.root
+    .getSharedType()
+    .observeDeep(
+      (events: Y.YEvent<Y.XmlText>[], transaction: Y.Transaction) => {
+        if (transaction.origin !== binding) {
+          syncYjsChangesToLexical(binding, provider, events, false);
+        }
+      },
+    );
+
+  // Apply the Yjs state — triggers the observer which syncs to Lexical
+  Y.applyUpdate(doc, stateBytes);
+
+  // Finalise the Lexical editor state
+  editor.update(() => {}, { discrete: true });
+
+  return { editor, doc, binding, provider };
 }
 
 // --- Command handlers (mutate the document, return Yjs update + data) ---
@@ -58,7 +98,7 @@ const queries: Record<string, (editor: LexicalEditor) => unknown> = {
   },
 };
 
-// --- Core edit pipeline ---
+// --- Core pipeline ---
 
 interface CommandRequest {
   command: string;
@@ -70,49 +110,13 @@ type CommandResponse =
   | { ok: true; type: "query"; data: SerializedEditorState }
   | { ok: false; error: string };
 
-function loadEditor(stateBase64: string) {
-  const stateBytes = base64ToUint8Array(stateBase64);
-
-  // Create Y.Doc and load the current document state
-  const doc = new Y.Doc();
-  doc.transact(() => {
-    Y.applyUpdate(doc, stateBytes);
-  }, "load");
-
-  // Create a headless editor (no setRootElement — avoids DOM reconciliation)
-  const editor = createEditor({
-    namespace: "sidecar",
-    nodes: [ChangeInsertNode, ChangeDeleteNode],
-    onError: (error: Error) => {
-      throw error;
-    },
-  });
-
-  // Create the v1 binding to link Lexical <-> Y.Doc
-  const docMap = new Map([["sidecar", doc]]);
-  const provider = createNoopProvider();
-  const binding = createBinding(editor, provider, "sidecar", doc, docMap);
-
-  // Sync existing Yjs state into Lexical editor
-  editor.update(
-    () => {
-      const root = binding.root;
-      root.syncPropertiesFromYjs(binding, null);
-      root.syncChildrenFromYjs(binding, null);
-    },
-    { tag: "collaboration", discrete: true },
-  );
-
-  return { editor, doc, binding, provider };
-}
-
 function processCommand(request: CommandRequest): CommandResponse {
   const { command, state: stateBase64 } = request;
 
   const queryHandler = queries[command];
   if (queryHandler) {
     const { editor } = loadEditor(stateBase64);
-    const data = queryHandler(editor);
+    const data = queryHandler(editor) as SerializedEditorState;
     return { ok: true, type: "query", data };
   }
 
@@ -120,13 +124,13 @@ function processCommand(request: CommandRequest): CommandResponse {
   if (commandHandler) {
     const { editor, doc, binding, provider } = loadEditor(stateBase64);
 
-    // Capture updates produced by our edit (after initial load)
+    // Capture Yjs updates produced by the edit
     const updates: Uint8Array[] = [];
     doc.on("update", (update: Uint8Array) => {
       updates.push(update);
     });
 
-    // Wire Lexical -> Yjs sync via the update listener
+    // Wire Lexical -> Yjs sync
     const removeUpdateListener = editor.registerUpdateListener(
       ({
         prevEditorState,
@@ -152,7 +156,7 @@ function processCommand(request: CommandRequest): CommandResponse {
       },
     );
 
-    // Execute the requested edit
+    // Execute the edit
     commandHandler(editor);
 
     // Clean up
@@ -164,7 +168,12 @@ function processCommand(request: CommandRequest): CommandResponse {
 
     const merged = Y.mergeUpdates(updates);
     const data = editor.getEditorState().toJSON();
-    return { ok: true, type: "command", update: uint8ArrayToBase64(merged), data };
+    return {
+      ok: true,
+      type: "command",
+      update: uint8ArrayToBase64(merged),
+      data,
+    };
   }
 
   return { ok: false, error: `unknown command: ${command}` };

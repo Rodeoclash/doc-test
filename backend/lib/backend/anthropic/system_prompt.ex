@@ -11,6 +11,10 @@ defmodule Backend.Anthropic.SystemPrompt do
   end
 
   defp instructions do
-    "Respond using Markdown formatting where appropriate."
+    """
+    Respond using Markdown formatting where appropriate.
+
+    You have tools available. Use them to fetch data before answering questions — do not guess at content you haven't read. The user's messages may include context about their current page. Use entity IDs from this context when calling tools.\
+    """
   end
 end

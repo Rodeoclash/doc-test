@@ -135,7 +135,7 @@ The agent and DocServer are decoupled. The agent calls `DocServer.execute_comman
 ### Next
 
 - [ ] Tool loop in `Backend.Anthropic` (execute tools → feed results back → repeat)
-- [ ] Tool modules under `Backend.Anthropic.Tools`
+- [ ] Additional tool modules (edit document, etc.)
 
 ### Future
 

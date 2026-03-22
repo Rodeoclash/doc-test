@@ -24,6 +24,10 @@
         )
       ]}>
         {Markdown.to_html(message.content)}
+        <details :if={message.context} class="mt-1 text-xs text-gray-400 not-prose">
+          <summary class="cursor-pointer">context</summary>
+          <pre class="mt-1 text-xs bg-gray-50 p-2 rounded overflow-x-auto">{Jason.encode!(message.context, pretty: true)}</pre>
+        </details>
       </div>
     </div>
 

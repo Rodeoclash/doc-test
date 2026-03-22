@@ -10,6 +10,10 @@ run service +cmd:
 console:
     docker compose exec backend iex --sname console --cookie dev --remsh backend
 
+# Start all services
+start:
+    docker compose up
+
 # Drop, create, migrate, and seed the database
 reset-db:
     docker compose run --rm backend sh -c "mix ecto.drop && mix ecto.setup"

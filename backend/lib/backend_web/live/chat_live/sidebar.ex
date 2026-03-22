@@ -33,14 +33,18 @@ defmodule BackendWeb.ChatLive.Sidebar do
     conversation_id = socket.assigns.conversation.id
 
     {:ok, _message} =
-      Conversations.add_message(conversation_id, %{role: :user, content: content})
+      Conversations.add_message(conversation_id, %{
+        role: :user,
+        content: content,
+        context: socket.assigns.context
+      })
 
     organisation_name = socket.assigns.organisation_user.organisation.name
     system_prompt = SystemPrompt.build(organisation_name: organisation_name)
 
     Task.async(fn ->
       {:ok, api_messages} = Conversations.messages_for_api(conversation_id)
-      Anthropic.chat(api_messages, system: system_prompt)
+      Anthropic.run(api_messages, system: system_prompt)
     end)
 
     {:noreply, socket |> assign(loading: true, error: nil) |> reload_conversation()}

@@ -4,6 +4,7 @@ defmodule Backend.Anthropic.Tools.ReadDocumentTest do
   import Backend.Factory
 
   alias Backend.Anthropic.Tools.ReadDocument
+  alias Backend.Documents.DocServer
 
   describe "definition/0" do
     test "returns a valid tool definition" do
@@ -21,6 +22,17 @@ defmodule Backend.Anthropic.Tools.ReadDocumentTest do
       assert {:ok, data} = ReadDocument.execute(%{"document_id" => document.id})
       assert is_map(data)
       assert Map.has_key?(data, "root")
+    end
+
+    test "returns content when document has yjs_state" do
+      # Create a document then write content to it via the sidecar
+      document = insert(:document)
+      {:ok, doc_server} = DocServer.find_or_start(document.id)
+      {:ok, _data} = DocServer.execute_command(doc_server, "append_hello")
+
+      assert {:ok, data} = ReadDocument.execute(%{"document_id" => document.id})
+      children = get_in(data, ["root", "children"])
+      assert length(children) > 0
     end
 
     test "returns error for a non-existent document" do

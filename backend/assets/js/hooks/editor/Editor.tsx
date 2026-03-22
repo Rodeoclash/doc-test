@@ -45,7 +45,7 @@ export default function Editor({ channel, documentId, username }: EditorProps) {
           ErrorBoundary={LexicalErrorBoundary}
         />
         <CollaborationPlugin
-          id={documentId}
+          id="root"
           providerFactory={(id, yjsDocMap) => {
             const doc = new Y.Doc();
             yjsDocMap.set(id, doc);
