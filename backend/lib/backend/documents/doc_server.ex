@@ -29,8 +29,8 @@ defmodule Backend.Documents.DocServer do
   Executes an edit command via the sidecar. Lazily starts the sidecar on first use.
   Gets current state, sends to sidecar, applies the resulting update.
   """
-  def execute_command(doc_server, command) do
-    GenServer.call(doc_server, {:execute_command, command}, @sidecar_timeout)
+  def execute_command(doc_server, command, data) do
+    GenServer.call(doc_server, {:execute_command, command, data}, @sidecar_timeout)
   end
 
   @doc """
@@ -79,11 +79,11 @@ defmodule Backend.Documents.DocServer do
     {:reply, :ok, state}
   end
 
-  def handle_call({:execute_command, command}, _from, state) do
+  def handle_call({:execute_command, command, data}, _from, state) do
     {:ok, state} = ensure_sidecar(state)
     {:ok, encoded_state} = Yex.encode_state_as_update(state.doc)
 
-    case Sidecar.execute(state.sidecar, command, encoded_state) do
+    case Sidecar.execute(state.sidecar, command, encoded_state, data) do
       {:ok, %{type: :command, update: update, data: data}} ->
         Yex.apply_update(state.doc, update)
         {:reply, {:ok, data}, state}
@@ -97,7 +97,7 @@ defmodule Backend.Documents.DocServer do
     {:ok, state} = ensure_sidecar(state)
     {:ok, encoded_state} = Yex.encode_state_as_update(state.doc)
 
-    case Sidecar.execute(state.sidecar, query, encoded_state) do
+    case Sidecar.execute(state.sidecar, query, encoded_state, nil) do
       {:ok, %{type: :query, data: data}} ->
         {:reply, {:ok, data}, state}
 

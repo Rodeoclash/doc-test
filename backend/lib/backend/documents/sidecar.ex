@@ -13,8 +13,8 @@ defmodule Backend.Documents.Sidecar do
   @doc """
   Sends a command and encoded Yjs state to the sidecar, returns the update binary.
   """
-  def execute(pid, command, encoded_state) do
-    GenServer.call(pid, {:execute, command, encoded_state}, 30_000)
+  def execute(pid, command, encoded_state, data) do
+    GenServer.call(pid, {:execute, command, encoded_state, data}, 30_000)
   end
 
   # Callbacks
@@ -26,16 +26,17 @@ defmodule Backend.Documents.Sidecar do
   end
 
   @impl true
-  def handle_call({:execute, _command, _encoded_state}, _from, %{pending_caller: caller} = state)
+  def handle_call({:execute, _command, _encoded_state, _data}, _from, %{pending_caller: caller} = state)
       when not is_nil(caller) do
     {:reply, {:error, :busy}, state}
   end
 
-  def handle_call({:execute, command, encoded_state}, from, state) do
+  def handle_call({:execute, command, encoded_state, data}, from, state) do
     payload =
       Jason.encode!(%{
         command: command,
-        state: Base.encode64(encoded_state)
+        state: Base.encode64(encoded_state),
+        data: data
       })
 
     Port.command(state.port, payload)

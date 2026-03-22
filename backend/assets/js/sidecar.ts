@@ -4,13 +4,7 @@ import {
   syncLexicalUpdateToYjs,
   syncYjsChangesToLexical,
 } from "@lexical/yjs";
-import {
-  $createParagraphNode,
-  $createTextNode,
-  $getRoot,
-  type LexicalEditor,
-  type SerializedEditorState,
-} from "lexical";
+import { type LexicalEditor, type SerializedEditorState } from "lexical";
 import * as Y from "yjs";
 import { editorNodes } from "./editor_nodes";
 
@@ -74,23 +68,19 @@ function loadEditor(stateBase64: string) {
 
 // --- Command handlers (mutate the document, return Yjs update + data) ---
 
-const commands: Record<string, (editor: LexicalEditor) => void> = {
-  append_hello(editor) {
-    editor.update(
-      () => {
-        const root = $getRoot();
-        const paragraph = $createParagraphNode();
-        paragraph.append($createTextNode("hello world"));
-        root.append(paragraph);
-      },
-      { discrete: true },
-    );
+const commands: Record<
+  string,
+  (editor: LexicalEditor, data: SerializedEditorState) => void
+> = {
+  apply_document(editor, data) {
+    const newState = editor.parseEditorState(data);
+    editor.setEditorState(newState);
   },
 };
 
 // --- Query handlers (read-only, return data) ---
 
-const queries: Record<string, (editor: LexicalEditor) => unknown> = {
+const queries: Record<string, (editor: LexicalEditor) => SerializedEditorState> = {
   read_document(editor) {
     return editor.getEditorState().toJSON();
   },
@@ -101,6 +91,7 @@ const queries: Record<string, (editor: LexicalEditor) => unknown> = {
 interface CommandRequest {
   command: string;
   state: string;
+  data: SerializedEditorState;
 }
 
 type CommandResponse =
@@ -109,13 +100,13 @@ type CommandResponse =
   | { ok: false; error: string };
 
 function processCommand(request: CommandRequest): CommandResponse {
-  const { command, state: stateBase64 } = request;
+  const { command, state: stateBase64, data } = request;
 
   const queryHandler = queries[command];
   if (queryHandler) {
     const { editor } = loadEditor(stateBase64);
-    const data = queryHandler(editor) as SerializedEditorState;
-    return { ok: true, type: "query", data };
+    const result = queryHandler(editor);
+    return { ok: true, type: "query", data: result };
   }
 
   const commandHandler = commands[command];
@@ -155,7 +146,7 @@ function processCommand(request: CommandRequest): CommandResponse {
     );
 
     // Execute the edit
-    commandHandler(editor);
+    commandHandler(editor, data);
 
     // Clean up
     removeUpdateListener();
@@ -165,12 +156,12 @@ function processCommand(request: CommandRequest): CommandResponse {
     }
 
     const merged = Y.mergeUpdates(updates);
-    const data = editor.getEditorState().toJSON();
+    const result = editor.getEditorState().toJSON();
     return {
       ok: true,
       type: "command",
       update: uint8ArrayToBase64(merged),
-      data,
+      data: result,
     };
   }
 
@@ -197,7 +188,10 @@ process.stdin.on("data", (chunk: Buffer) => {
       const request: CommandRequest = JSON.parse(payload.toString("utf-8"));
       response = processCommand(request);
     } catch (error) {
-      response = { ok: false, error: (error as Error).message };
+      response = {
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
     }
 
     const responseBytes = Buffer.from(JSON.stringify(response), "utf-8");
