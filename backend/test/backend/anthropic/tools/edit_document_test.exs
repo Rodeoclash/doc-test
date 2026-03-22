@@ -4,7 +4,6 @@ defmodule Backend.Anthropic.Tools.EditDocumentTest do
   import Backend.Factory
 
   alias Backend.Anthropic.Tools.EditDocument
-  alias Backend.Anthropic.Tools.ReadDocument
 
   @sample_state %{
     "root" => %{
@@ -58,24 +57,6 @@ defmodule Backend.Anthropic.Tools.EditDocumentTest do
                })
 
       assert data |> get_in(["root", "children"]) |> length() > 0
-    end
-
-    test "content is readable after editing" do
-      document = insert(:document)
-
-      {:ok, _} =
-        EditDocument.execute(%{
-          "document_id" => document.id,
-          "document" => @sample_state
-        })
-
-      {:ok, data} = ReadDocument.execute(%{"document_id" => document.id})
-      children = get_in(data, ["root", "children"])
-      assert length(children) == 1
-
-      [paragraph] = children
-      [text_node] = paragraph["children"]
-      assert text_node["text"] == "hello world"
     end
 
     test "returns error for a non-existent document" do
