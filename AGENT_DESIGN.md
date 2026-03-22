@@ -128,14 +128,31 @@ DocServer (per document, globally registered via :global)
         - Node.js Port for Lexical commands and queries
 ```
 
-The agent and DocServer are decoupled. The agent calls `DocServer.execute_command/2` and `DocServer.execute_query/2` as a consumer. Multiple agents (different users) can call the same DocServer — operations are serialized.
+The agent and DocServer are decoupled. The agent calls `DocServer.execute_command/3` and `DocServer.execute_query/2` as a consumer. Multiple agents (different users) can call the same DocServer — operations are serialized.
 
 ## Implementation Progress
 
+### Completed
+
+- [x] Tool loop in `Backend.Anthropic` (execute tools → feed results back → repeat until end_turn)
+- [x] `ReadDocument` tool — reads document via sidecar's headless Lexical editor, returns native Lexical JSON
+- [x] `EditDocument` tool — applies complete Lexical JSON to a document, produces Yjs update diff
+- [x] Shared node registry (`editor_nodes.ts`) — single source of truth for browser editor and sidecar
+- [x] Node descriptions generated at build time for AI system prompt (`priv/node_descriptions.md`)
+- [x] `@lexical/headless` for server-side Yjs → Lexical sync (observer + `syncYjsChangesToLexical`)
+
 ### Next
 
-- [ ] Tool loop in `Backend.Anthropic` (execute tools → feed results back → repeat)
-- [ ] Additional tool modules (edit document, etc.)
+- [ ] Add read_document test that verifies content can be read back after editing via EditDocument
+- [ ] Wrap AI-authored content in change nodes (ChangeInsertNode/ChangeDeleteNode) so users can review and accept/reject AI edits before they become permanent
+- [ ] Validate Lexical JSON from Claude — return errors to Claude for self-correction via the tool loop
+
+### Chat UI
+
+- [ ] Ctrl+Enter to submit the chat input
+- [ ] Ability to start a new conversation
+- [ ] Ability to go back in the conversation to a previous message (branching)
+- [ ] AI chat outside the context of a document (e.g. organisation-level sidebar)
 
 ### Future
 
