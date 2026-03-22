@@ -3,6 +3,7 @@ defmodule Backend.Anthropic.Tools.ReadDocumentTest do
 
   import Backend.Factory
 
+  alias Backend.Anthropic.Tools.EditDocument
   alias Backend.Anthropic.Tools.ReadDocument
 
   describe "definition/0" do
@@ -21,6 +22,51 @@ defmodule Backend.Anthropic.Tools.ReadDocumentTest do
       assert {:ok, data} = ReadDocument.execute(%{"document_id" => document.id})
       assert is_map(data)
       assert Map.has_key?(data, "root")
+    end
+
+    test "returns content after editing" do
+      document = insert(:document)
+
+      {:ok, _} =
+        EditDocument.execute(%{
+          "document_id" => document.id,
+          "document" => %{
+            "root" => %{
+              "children" => [
+                %{
+                  "type" => "paragraph",
+                  "direction" => "ltr",
+                  "format" => "",
+                  "indent" => 0,
+                  "textFormat" => 0,
+                  "textStyle" => "",
+                  "version" => 1,
+                  "children" => [
+                    %{
+                      "type" => "text",
+                      "text" => "hello world",
+                      "format" => 0,
+                      "detail" => 0,
+                      "mode" => "normal",
+                      "style" => "",
+                      "version" => 1
+                    }
+                  ]
+                }
+              ],
+              "direction" => "ltr",
+              "format" => "",
+              "indent" => 0,
+              "type" => "root",
+              "version" => 1
+            }
+          }
+        })
+
+      assert {:ok, data} = ReadDocument.execute(%{"document_id" => document.id})
+      [paragraph] = get_in(data, ["root", "children"])
+      [text_node] = paragraph["children"]
+      assert text_node["text"] == "hello world"
     end
 
     test "returns error for a non-existent document" do
