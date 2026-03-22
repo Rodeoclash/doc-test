@@ -8,28 +8,31 @@ defmodule BackendWeb.DocumentLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="grid grid-cols-[1fr_minmax(20rem,25%)] h-full">
+    <div id="document-layout" class="flex h-full" phx-hook="ResizablePanel">
       <div
         id="editor"
+        class="flex-1 min-w-0"
         phx-hook="Editor"
         data-document-id={@document.id}
         data-username={@current_scope.user.email}
       >
       </div>
 
-      {live_render(@socket, BackendWeb.ChatLive.Sidebar,
-        id: "chat-sidebar",
-        session: %{
-          "organisation_user_id" => @organisation_user.id,
-          "context" => %{
-            "type" => "document",
-            "id" => to_string(@document.id),
-            "title" => @document.name,
-            "action" => "editing",
-            "capabilities" => ["document_tools"]
+      <div data-resize-panel>
+        {live_render(@socket, BackendWeb.ChatLive.Sidebar,
+          id: "chat-sidebar",
+          session: %{
+            "organisation_user_id" => @organisation_user.id,
+            "context" => %{
+              "type" => "document",
+              "id" => to_string(@document.id),
+              "title" => @document.name,
+              "action" => "editing",
+              "capabilities" => ["document_tools"]
+            }
           }
-        }
-      )}
+        )}
+      </div>
     </div>
     """
   end

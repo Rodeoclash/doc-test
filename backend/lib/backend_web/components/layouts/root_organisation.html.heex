@@ -9,6 +9,15 @@
       {assigns[:page_title]}
     </.live_title>
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
+    <%!-- Read saved sidebar width from localStorage before first paint to avoid
+         a flash of layout shift. The CSS variable is consumed by [data-resize-panel]
+         in app.css. The ResizablePanel hook keeps this value in sync on drag. --%>
+    <script>
+      (function() {
+        var w = localStorage.getItem("sidebar-width");
+        if (w) document.documentElement.style.setProperty("--sidebar-width", w + "px");
+      })();
+    </script>
     <script defer phx-track-static type="text/javascript" src={~p"/assets/js/private.js"}>
     </script>
   </head>

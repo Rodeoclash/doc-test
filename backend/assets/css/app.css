@@ -66,3 +66,12 @@
 [data-phx-session], [data-phx-teleported-src] { display: contents }
 
 body { font-family: sans-serif; }
+
+/* Resizable sidebar panel. Width is set via --sidebar-width CSS variable,
+   which is populated from localStorage by an inline script in the layout
+   to avoid a flash of wrong layout on page load. */
+[data-resize-panel] {
+  width: var(--sidebar-width, 25vw);
+  flex-shrink: 0;
+  overflow: hidden;
+}
