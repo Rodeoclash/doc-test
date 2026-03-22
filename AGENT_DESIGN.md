@@ -140,6 +140,10 @@ The agent and DocServer are decoupled. The agent calls `DocServer.execute_comman
 - [x] Shared node registry (`editor_nodes.ts`) — single source of truth for browser editor and sidecar
 - [x] Node descriptions generated at build time for AI system prompt (`priv/node_descriptions.md`)
 - [x] `@lexical/headless` for server-side Yjs → Lexical sync (observer + `syncYjsChangesToLexical`)
+- [x] Context-aware sidebar — system prompt, tools, and tool loop driven by capabilities list in context map
+  - Parent pages pass `"capabilities" => [...]` in the context map (e.g. `["document_tools"]`)
+  - `Tools.definitions/1` groups tools by capability; empty capabilities = no tools, falls back to plain chat
+  - `SystemPrompt.build/1` conditionally includes tool instructions and node descriptions based on capabilities
 
 ### Next
 
