@@ -8,9 +8,8 @@ import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import type { Channel } from "phoenix";
 import * as Y from "yjs";
+import { editorNodes } from "../../editor_nodes";
 import { PhoenixChannelProvider } from "../../user_socket/PhoenixChannelProvider";
-import { ChangeDeleteNode } from "./nodes/change_delete";
-import { ChangeInsertNode } from "./nodes/change_insert";
 import { ChangePopoverPlugin } from "./plugins/ChangePopoverPlugin";
 
 const theme = {
@@ -32,7 +31,7 @@ export default function Editor({ channel, documentId, username }: EditorProps) {
     // No editorState — CollaborationPlugin manages state via Yjs
     editorState: null,
     namespace: "MyEditor",
-    nodes: [ChangeDeleteNode, ChangeInsertNode],
+    nodes: editorNodes,
     theme,
     onError,
   };
