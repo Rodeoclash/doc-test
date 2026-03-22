@@ -1,8 +1,9 @@
 {
   "dependencies": {
     "@floating-ui/dom": "^1.7.5",
-    "@lexical/react": "^0.40.0",
-    "lexical": "^0.40.0",
+    "@lexical/headless": "^0.42.0",
+    "@lexical/react": "^0.42.0",
+    "lexical": "^0.42.0",
     "phoenix": "../deps/phoenix",
     "phoenix_html": "../deps/phoenix_html",
     "phoenix_live_view": "../deps/phoenix_live_view",
