@@ -22,11 +22,10 @@ function onError(error: Error): void {
 
 type EditorProps = {
   channel: Channel;
-  documentId: string;
   username: string;
 };
 
-export default function Editor({ channel, documentId, username }: EditorProps) {
+export default function Editor({ channel, username }: EditorProps) {
   const initialConfig: InitialConfigType = {
     // No editorState — CollaborationPlugin manages state via Yjs
     editorState: null,

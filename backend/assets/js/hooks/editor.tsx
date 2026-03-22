@@ -21,13 +21,7 @@ class EditorHook extends Hook {
 
     this.channel = createDocumentChannel(documentId);
     this.root = createRoot(this.el);
-    this.root.render(
-      <Editor
-        channel={this.channel}
-        documentId={documentId}
-        username={username}
-      />,
-    );
+    this.root.render(<Editor channel={this.channel} username={username} />);
   }
 
   destroyed() {
