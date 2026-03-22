@@ -1,3 +1,9 @@
+import { createHeadlessEditor } from "@lexical/headless";
+import {
+  createBinding,
+  syncLexicalUpdateToYjs,
+  syncYjsChangesToLexical,
+} from "@lexical/yjs";
 import {
   $createParagraphNode,
   $createTextNode,
@@ -5,16 +11,9 @@ import {
   type LexicalEditor,
   type SerializedEditorState,
 } from "lexical";
-import { createHeadlessEditor } from "@lexical/headless";
-import {
-  createBinding,
-  syncLexicalUpdateToYjs,
-  syncYjsChangesToLexical,
-} from "@lexical/yjs";
 import * as Y from "yjs";
-
-import { ChangeInsertNode } from "./hooks/editor/nodes/change_insert";
 import { ChangeDeleteNode } from "./hooks/editor/nodes/change_delete";
+import { ChangeInsertNode } from "./hooks/editor/nodes/change_insert";
 
 // --- No-op provider (satisfies the binding interface without network) ---
 
