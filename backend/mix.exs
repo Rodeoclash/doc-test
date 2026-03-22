@@ -93,7 +93,15 @@ defmodule Backend.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["compile", "tailwind backend", "esbuild backend", "esbuild sidecar"],
+      "assets.build": [
+        "compile",
+        "tailwind backend",
+        "esbuild backend",
+        "esbuild sidecar",
+        "esbuild node_descriptions",
+        "cmd node priv/node_descriptions.mjs",
+        "cmd rm -f priv/node_descriptions.mjs"
+      ],
       "assets.deploy": [
         "tailwind backend --minify",
         "esbuild backend --minify",

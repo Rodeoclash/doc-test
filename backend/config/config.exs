@@ -68,6 +68,16 @@ config :esbuild,
         Path.expand("../assets/node_modules", __DIR__)
       ]
     }
+  ],
+  node_descriptions: [
+    args:
+      ~w(js/generate_node_descriptions.ts --bundle --platform=node --format=esm --outfile=../priv/node_descriptions.mjs --alias:@=. --loader:.tsx=tsx --loader:.ts=ts),
+    cd: Path.expand("../assets", __DIR__),
+    env: %{
+      "NODE_PATH" => [
+        Path.expand("../assets/node_modules", __DIR__)
+      ]
+    }
   ]
 
 # Configure Elixir's Logger
