@@ -81,7 +81,7 @@ defmodule Backend.Documents.DocServer do
 
   def handle_call({:execute_command, command}, _from, state) do
     {:ok, state} = ensure_sidecar(state)
-    encoded_state = Yex.encode_state_as_update(state.doc)
+    {:ok, encoded_state} = Yex.encode_state_as_update(state.doc)
 
     case Sidecar.execute(state.sidecar, command, encoded_state) do
       {:ok, %{type: :command, update: update, data: data}} ->
@@ -95,7 +95,7 @@ defmodule Backend.Documents.DocServer do
 
   def handle_call({:execute_query, query}, _from, state) do
     {:ok, state} = ensure_sidecar(state)
-    encoded_state = Yex.encode_state_as_update(state.doc)
+    {:ok, encoded_state} = Yex.encode_state_as_update(state.doc)
 
     case Sidecar.execute(state.sidecar, query, encoded_state) do
       {:ok, %{type: :query, data: data}} ->
