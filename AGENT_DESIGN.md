@@ -31,7 +31,8 @@ The agent's capabilities grow with the organisation's data model. Claude API too
 
 Tools are static — defined in code, not driven from the database. New capabilities are added by creating new tool modules.
 
-- Edit documents (via `DocServer.execute_edit/2`)
+- Read documents (via `DocServer.execute_query/2`)
+- Edit documents (via `DocServer.execute_command/2`)
 - Query risks, policies, evidence (future)
 - Cross-reference entities (future)
 - Assign users, update records (future)
@@ -57,7 +58,7 @@ conversations
 messages
   - conversation_id
   - role: :user / :assistant
-  - content: text (with inline reference markers)
+  - content: text (markdown, with inline reference markers)
   - context: map (snapshot of where the user was)
 ```
 
@@ -96,6 +97,10 @@ Uses `saxy` for XML building and parsing. The format round-trips cleanly (encode
 
 When Claude responds with `stop_reason: "tool_use"`, the loop executes the requested tools locally, sends results back, and repeats until Claude returns `"end_turn"`. A max iterations guard prevents runaway loops. Tools are defined as modules with a `definition/0` (JSON schema for Claude) and `execute/2` (local implementation).
 
+### Content Format
+
+Message content (both user and assistant) is stored as **Markdown**. The UI renders it as HTML using `earmark` with Tailwind's `@tailwindcss/typography` `prose` classes for styling. The system prompt should instruct Claude to respond in Markdown.
+
 ### System Prompt Assembly (TODO)
 
 Each API call includes a system prompt assembled from the agent's current state:
@@ -107,7 +112,7 @@ Each API call includes a system prompt assembled from the agent's current state:
 ## Concurrency
 
 - One agent per user per org — no contention between users
-- `DocServer.execute_edit/2` serializes edits through the GenServer mailbox
+- `DocServer.execute_command/2` serializes edits through the GenServer mailbox
 - Yjs CRDT handles concurrent human + agent edits (merge is conflict-free at the data level, though semantic conflicts are possible)
 - During a sidecar operation, DocServer is blocked. Human edits via channels queue behind it. Acceptable for now; async execution is a future optimisation if needed.
 
@@ -119,22 +124,16 @@ Backend.Jido (supervision tree)
         - Sends signals to DocServer when editing
 
 DocServer (per document, globally registered via :global)
-  └── Sidecar (lazily started, linked to DocServer)
-        - Node.js Port for Lexical edits
+  └── Sidecar (lazily started, monitored by DocServer)
+        - Node.js Port for Lexical commands and queries
 ```
 
-The agent and DocServer are decoupled. The agent calls `DocServer.execute_edit/2` as a consumer. Multiple agents (different users) can call the same DocServer — edits are serialized.
+The agent and DocServer are decoupled. The agent calls `DocServer.execute_command/2` and `DocServer.execute_query/2` as a consumer. Multiple agents (different users) can call the same DocServer — operations are serialized.
 
 ## Implementation Progress
 
 ### Next
 
-- [ ] Sidebar LiveComponent (chat UI)
-- [ ] Wire sidebar → conversations → Anthropic (send message, display response)
-
-### Coming Back To
-
-- [ ] System prompt assembly (org name, agent identity, tool descriptions)
 - [ ] Tool loop in `Backend.Anthropic` (execute tools → feed results back → repeat)
 - [ ] Tool modules under `Backend.Anthropic.Tools`
 

@@ -44,10 +44,9 @@ Users register without an organisation. Organisation membership is managed separ
 - **ExecuteEditCommand** (`agents/actions/execute_edit_command.ex`) — Pure Jido action that records a command against the document.
 - Agents are testable as pure functions via `Agent.cmd/2` or as running processes via `Backend.Jido.start_agent/2` + `Jido.AgentServer.call/2`.
 
-### Document Server & EditBot
+### Document Server
 
-- **DocServer** (`documents/doc_server.ex`) — GenServer managing Yjs document state per document. Uses Registry (`Backend.DocRegistry`) and DynamicSupervisor (`Backend.DocSupervisor`). Provides `get_encoded_state/1`, `apply_update/2`, `find_or_start/1`.
-- **EditBot** (`documents/edit_bot.ex`) — GenServer that communicates with a Node.js sidecar via Port (`{:packet, 4}` framing). Sends edit commands to headless Lexical, applies resulting Yjs updates back to DocServer.
+- **DocServer** (`documents/doc_server.ex`) — GenServer managing Yjs document state per document. Uses `:global` registry and DynamicSupervisor (`Backend.DocSupervisor`). Provides `get_encoded_state/1`, `apply_update/2`, `find_or_start/1`, `execute_command/2`, `execute_query/2`. Lazily starts and monitors a Sidecar process for interacting with Lexical.
 
 ### Layouts
 
@@ -78,9 +77,9 @@ React 19 + TypeScript collaborative editor using Lexical with Yjs.
 
 ### Node.js Sidecar (`backend/assets/js/sidecar.ts`)
 
-Long-running Node.js process that applies Lexical edits to Yjs documents. Built by a separate esbuild profile (`sidecar`) to `priv/sidecar/index.mjs`. Communicates with EditBot via stdin/stdout using `{:packet, 4}` framing (4-byte big-endian length prefix, JSON payloads).
+Long-running Node.js process for headless Lexical operations on Yjs documents. Built by a separate esbuild profile (`sidecar`) to `priv/sidecar/index.mjs`. Communicates with the Sidecar GenServer via stdin/stdout using `{:packet, 4}` framing (4-byte big-endian length prefix, JSON payloads).
 
-Pipeline per request: receives `{ command, state (base64) }` → creates Y.Doc from state → creates headless Lexical editor with `@lexical/yjs` binding → executes the named command → captures Yjs updates → returns `{ ok, update (base64) }`. Registers `ChangeInsertNode` and `ChangeDeleteNode` so documents containing change nodes load without errors. Exits cleanly when stdin closes (Elixir process died).
+Supports two operation types: **commands** (mutate the document, return Yjs update + Lexical JSON) and **queries** (read-only, return Lexical JSON). Pipeline per request: receives `{ command, state (base64) }` → creates Y.Doc from state → creates headless Lexical editor with `@lexical/yjs` binding → executes the handler → returns `{ ok, type, data/update }`. Registers `ChangeInsertNode` and `ChangeDeleteNode` so documents containing change nodes load without errors. Exits cleanly when stdin closes (Elixir process died).
 
 ### Document Show Page
 
