@@ -14,7 +14,7 @@ import type * as Y from "yjs";
 // Outer message type bytes matching yrs::sync::protocol constants
 const MESSAGE_SYNC = 0;
 const MESSAGE_AWARENESS = 1;
-const MESSAGE_AUTH = 2;
+const _MESSAGE_AUTH = 2;
 const MESSAGE_QUERY_AWARENESS = 3;
 
 type EventType = "sync" | "status" | "update" | "reload";
@@ -111,7 +111,9 @@ export class PhoenixChannelProvider implements Provider {
   }
 
   private emit(type: string, ...args: unknown[]): void {
-    this.listeners.get(type)?.forEach((cb) => cb(...args));
+    this.listeners.get(type)?.forEach((cb) => {
+      cb(...args);
+    });
   }
 
   /**
