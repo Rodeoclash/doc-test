@@ -3,6 +3,7 @@ import { hooks as colocatedHooks } from "phoenix-colocated/backend";
 import AutoResizeHook from "./hooks/auto_resize";
 import EditorHook from "./hooks/editor";
 import ScrollToBottomHook from "./hooks/scroll_to_bottom";
+import SubmitOnShortcutHook from "./hooks/submit_on_shortcut";
 import { setupLiveSocket } from "./shared";
 
 setupLiveSocket({
@@ -10,4 +11,5 @@ setupLiveSocket({
   AutoResize: AutoResizeHook,
   Editor: EditorHook,
   ScrollToBottom: ScrollToBottomHook,
+  SubmitOnShortcut: SubmitOnShortcutHook,
 });
