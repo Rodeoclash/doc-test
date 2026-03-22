@@ -25,7 +25,8 @@ defmodule BackendWeb.DocumentLive.Show do
             "type" => "document",
             "id" => to_string(@document.id),
             "title" => @document.name,
-            "action" => "editing"
+            "action" => "editing",
+            "capabilities" => ["document_tools"]
           }
         }
       )}

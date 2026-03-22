@@ -3,12 +3,22 @@ defmodule Backend.Anthropic.ToolsTest do
 
   alias Backend.Anthropic.Tools
 
-  describe "definitions/0" do
-    test "returns a list of tool definitions" do
-      definitions = Tools.definitions()
+  describe "definitions/1" do
+    test "returns document tools for document_tools capability" do
+      names =
+        ["document_tools"]
+        |> Tools.definitions()
+        |> Enum.map(& &1.name)
 
-      assert is_list(definitions)
-      assert Enum.any?(definitions, &(&1.name == "read_document"))
+      assert names == ["read_document", "edit_document"]
+    end
+
+    test "returns empty list for no capabilities" do
+      assert Tools.definitions([]) == []
+    end
+
+    test "returns empty list for unknown capability" do
+      assert Tools.definitions(["nonexistent"]) == []
     end
   end
 

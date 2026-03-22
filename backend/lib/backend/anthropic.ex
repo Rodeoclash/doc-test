@@ -49,9 +49,21 @@ defmodule Backend.Anthropic do
   @doc """
   Runs a conversation with tool use. Sends messages to Claude with tool definitions,
   executes any tool calls, feeds results back, and repeats until Claude is done.
+  When no tools are provided, falls back to a simple chat call.
+
+  ## Options
+
+    * `:tools` - List of tool definitions (default: `[]`)
+    * All options from `chat/2`
   """
   def run(messages, opts \\ []) do
-    do_run(messages, Tools.definitions(), opts, 0)
+    {tools, opts} = Keyword.pop(opts, :tools, [])
+
+    if tools == [] do
+      chat(messages, opts)
+    else
+      do_run(messages, tools, opts, 0)
+    end
   end
 
   defp do_run(_messages, _tools, _opts, iteration) when iteration >= @max_iterations do

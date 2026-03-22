@@ -40,11 +40,16 @@ defmodule BackendWeb.ChatLive.Sidebar do
       })
 
     organisation_name = socket.assigns.organisation_user.organisation.name
-    system_prompt = SystemPrompt.build(organisation_name: organisation_name)
+    capabilities = get_in(socket.assigns, [:context, "capabilities"]) || []
+
+    system_prompt =
+      SystemPrompt.build(organisation_name: organisation_name, capabilities: capabilities)
+
+    tools = Backend.Anthropic.Tools.definitions(capabilities)
 
     Task.async(fn ->
       {:ok, api_messages} = Conversations.messages_for_api(conversation_id)
-      Anthropic.run(api_messages, system: system_prompt)
+      Anthropic.run(api_messages, system: system_prompt, tools: tools)
     end)
 
     {:noreply, socket |> assign(loading: true, error: nil) |> reload_conversation()}

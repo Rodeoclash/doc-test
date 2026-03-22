@@ -1,6 +1,8 @@
 defmodule Backend.AnthropicTest do
   use ExUnit.Case, async: true
 
+  alias Backend.Anthropic.Tools
+
   describe "chat/2" do
     test "returns parsed text response" do
       Req.Test.stub(:anthropic, fn conn ->
@@ -93,8 +95,14 @@ defmodule Backend.AnthropicTest do
   end
 
   describe "run/2" do
-    test "returns response when no tools are called" do
+    test "falls back to chat when no tools provided" do
       Req.Test.stub(:anthropic, fn conn ->
+        {:ok, body, conn} = Plug.Conn.read_body(conn)
+        decoded = Jason.decode!(body)
+
+        # Should not include tools in the request
+        refute Map.has_key?(decoded, "tools")
+
         Req.Test.json(conn, %{
           "content" => [%{"type" => "text", "text" => "No tools needed."}],
           "stop_reason" => "end_turn",
@@ -148,6 +156,7 @@ defmodule Backend.AnthropicTest do
       assert {:ok, response} =
                Backend.Anthropic.run(
                  [%{role: "user", content: "Read document 999"}],
+                 tools: Tools.definitions(["document_tools"]),
                  req_options: [plug: {Req.Test, :anthropic}]
                )
 
@@ -170,6 +179,7 @@ defmodule Backend.AnthropicTest do
       assert {:error, :max_iterations} =
                Backend.Anthropic.run(
                  [%{role: "user", content: "Loop forever"}],
+                 tools: Tools.definitions(["document_tools"]),
                  req_options: [plug: {Req.Test, :anthropic}]
                )
     end
