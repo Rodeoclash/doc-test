@@ -1,10 +1,9 @@
-import { type Klass, type LexicalNode } from "lexical";
-import { HeadingNode, QuoteNode } from "@lexical/rich-text";
-import { ListNode, ListItemNode } from "@lexical/list";
 import { LinkNode } from "@lexical/link";
+import { ListItemNode, ListNode } from "@lexical/list";
+import { HeadingNode, QuoteNode } from "@lexical/rich-text";
+import type { Klass, LexicalNode } from "lexical";
 
-import { ChangeInsertNode } from "./hooks/editor/nodes/change_insert";
-import { ChangeDeleteNode } from "./hooks/editor/nodes/change_delete";
+import { ChangeNode } from "./hooks/editor/nodes/change";
 
 /**
  * All node types registered with the editor. Shared between the browser
@@ -17,8 +16,7 @@ export const editorNodes: Klass<LexicalNode>[] = [
   ListNode,
   ListItemNode,
   LinkNode,
-  ChangeInsertNode,
-  ChangeDeleteNode,
+  ChangeNode,
 ];
 
 /**
@@ -89,17 +87,18 @@ Combine values by adding them (e.g. bold + italic = 3, bold + underline = 9).
 { "type": "text", "text": "Hello world", "format": 0, "detail": 0, "mode": "normal", "style": "", "version": 1 }
 \`\`\`
 
-### Custom Nodes
+### Change Node
 
-**change-insert**
-Wraps content that has been added to the document. Used for tracked changes.
-\`\`\`json
-{ "type": "change-insert", "direction": "ltr", "format": "", "indent": 0, "version": 1, "children": [...] }
-\`\`\`
+Wraps content involved in a tracked change. The \`kind\` property indicates whether this is inserted or deleted content. Changes can appear in three patterns:
 
-**change-delete**
-Wraps content that has been removed from the document. Used for tracked changes.
+1. **Insert only** — A single change node with kind="insert". New content was added.
+2. **Delete only** — A single change node with kind="delete". Content was removed.
+3. **Replace** — Two change nodes sharing the same changeId: one kind="delete" (old content) and one kind="insert" (new content). They should be adjacent siblings.
+
+When accepting a change: inserted content becomes permanent, deleted content is removed.
+When rejecting a change: inserted content is removed, deleted content is restored.
+
 \`\`\`json
-{ "type": "change-delete", "direction": "ltr", "format": "", "indent": 0, "version": 1, "children": [...] }
+{ "type": "change", "kind": "insert", "changeId": "unique-id", "direction": "ltr", "format": "", "indent": 0, "version": 1, "children": [...] }
 \`\`\`
 `.trim();

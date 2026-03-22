@@ -31,7 +31,14 @@ defmodule Backend.Anthropic.SystemPrompt do
   defp capability_instructions("document_tools") do
     [
       """
-      You have tools available. Use them to fetch data before answering questions — do not guess at content you haven't read. The user's messages may include context about their current page. Use entity IDs from this context when calling tools.\
+      You have tools available. Use them to fetch data before answering questions — do not guess at content you haven't read. The user's messages may include context about their current page. Use entity IDs from this context when calling tools.
+
+      When editing a document, you MUST wrap all changes in change nodes so the user can review them:
+      - New content must be wrapped in a change node with kind="insert".
+      - Content you are removing must be wrapped in a change node with kind="delete".
+      - When replacing content, use two change nodes with the same changeId: one kind="delete" wrapping the old content, one kind="insert" wrapping the new content, as adjacent siblings.
+      - Each change or group of related changes should have a unique changeId (use a descriptive string like "add-intro" or "rewrite-section-2").
+      - Never modify document content without wrapping changes in change nodes. The user must be able to accept or reject every change you make.\
       """
     ]
   end

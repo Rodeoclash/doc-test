@@ -4,7 +4,7 @@ import {
   syncLexicalUpdateToYjs,
   syncYjsChangesToLexical,
 } from "@lexical/yjs";
-import { type LexicalEditor, type SerializedEditorState } from "lexical";
+import type { LexicalEditor, SerializedEditorState } from "lexical";
 import * as Y from "yjs";
 import { editorNodes } from "./editor_nodes";
 
@@ -80,7 +80,10 @@ const commands: Record<
 
 // --- Query handlers (read-only, return data) ---
 
-const queries: Record<string, (editor: LexicalEditor) => SerializedEditorState> = {
+const queries: Record<
+  string,
+  (editor: LexicalEditor) => SerializedEditorState
+> = {
   read_document(editor) {
     return editor.getEditorState().toJSON();
   },

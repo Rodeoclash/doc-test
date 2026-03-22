@@ -18,23 +18,14 @@ import {
 } from "lexical";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import {
-  $isChangeDeleteNode,
-  type ChangeDeleteNode,
-} from "../nodes/change_delete";
-import {
-  $isChangeInsertNode,
-  type ChangeInsertNode,
-} from "../nodes/change_insert";
-
-type ChangeNode = ChangeDeleteNode | ChangeInsertNode;
+import { $isChangeNode, type ChangeNode } from "../nodes/change";
 
 // Walk up from a node to find the nearest change node ancestor.
 // Returns null if the node isn't inside a tracked change.
 function $findChangeNode(node: LexicalNode | null): ChangeNode | null {
   let current: LexicalNode | null = node;
   while (current) {
-    if ($isChangeDeleteNode(current) || $isChangeInsertNode(current)) {
+    if ($isChangeNode(current)) {
       return current;
     }
     current = current.getParent();
@@ -42,21 +33,22 @@ function $findChangeNode(node: LexicalNode | null): ChangeNode | null {
   return null;
 }
 
-// Find the paired delete/insert nodes for a given changeId by walking the tree.
-// A tracked change always has a delete and insert node sharing the same changeId.
+// Find change nodes for a given changeId by walking the tree.
+// A change may be standalone (insert-only or delete-only) or paired (replace).
 function $findChangeNodesById(changeId: string): {
-  deleteNode: ChangeDeleteNode | null;
-  insertNode: ChangeInsertNode | null;
+  deleteNode: ChangeNode | null;
+  insertNode: ChangeNode | null;
 } {
-  let deleteNode: ChangeDeleteNode | null = null;
-  let insertNode: ChangeInsertNode | null = null;
+  let deleteNode: ChangeNode | null = null;
+  let insertNode: ChangeNode | null = null;
 
   function walk(node: LexicalNode): void {
-    if ($isChangeDeleteNode(node) && node.__changeId === changeId) {
-      deleteNode = node;
-    }
-    if ($isChangeInsertNode(node) && node.__changeId === changeId) {
-      insertNode = node;
+    if ($isChangeNode(node) && node.__changeId === changeId) {
+      if (node.__kind === "delete") {
+        deleteNode = node;
+      } else {
+        insertNode = node;
+      }
     }
     if ($isElementNode(node)) {
       for (const child of node.getChildren()) {
@@ -222,12 +214,14 @@ export function ChangePopoverPlugin() {
         className="absolute w-2 h-2 bg-white border-l border-t border-gray-200"
       />
       <button
+        type="button"
         className="px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-800 rounded cursor-pointer"
         onClick={() => resolveChange("insert")}
       >
         Accept
       </button>
       <button
+        type="button"
         className="px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-800 rounded cursor-pointer"
         onClick={() => resolveChange("delete")}
       >
