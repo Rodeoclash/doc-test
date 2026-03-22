@@ -1,8 +1,13 @@
 defmodule Backend.Anthropic.SystemPrompt do
   @moduledoc false
 
+  @node_descriptions :backend
+                     |> :code.priv_dir()
+                     |> Path.join("node_descriptions.md")
+                     |> File.read!()
+
   def build(opts) do
-    Enum.join([identity(opts), instructions()], "\n\n")
+    Enum.join([identity(opts), instructions(), @node_descriptions], "\n\n")
   end
 
   defp identity(opts) do
