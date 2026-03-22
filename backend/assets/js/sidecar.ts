@@ -12,8 +12,7 @@ import {
   type SerializedEditorState,
 } from "lexical";
 import * as Y from "yjs";
-import { ChangeDeleteNode } from "./hooks/editor/nodes/change_delete";
-import { ChangeInsertNode } from "./hooks/editor/nodes/change_insert";
+import { editorNodes } from "./editor_nodes";
 
 // --- No-op provider (satisfies the binding interface without network) ---
 
@@ -43,7 +42,7 @@ function loadEditor(stateBase64: string) {
 
   const editor = createHeadlessEditor({
     namespace: "sidecar",
-    nodes: [ChangeInsertNode, ChangeDeleteNode],
+    nodes: editorNodes,
     onError: (error: Error) => {
       throw error;
     },
