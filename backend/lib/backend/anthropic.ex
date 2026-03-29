@@ -141,7 +141,8 @@ defmodule Backend.Anthropic do
       headers: [
         {"x-api-key", api_key},
         {"anthropic-version", @api_version}
-      ]
+      ],
+      receive_timeout: 45_000
     ]
     |> Keyword.merge(Application.get_env(:backend, :anthropic_req_options, []))
     |> Keyword.merge(opts[:req_options] || [])
