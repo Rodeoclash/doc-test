@@ -62,7 +62,7 @@ export default function Editor({ channel, username }: EditorProps) {
     >
       <LexicalCollaboration>
         <ToolbarPlugin />
-        <div className="bg-white border-x border-b border-gray-200 rounded-b-lg p-8 prose prose-sm max-w-none">
+        <div className="bg-white border-x border-b border-gray-200 rounded-b-lg px-8 py-4">
           <RichText />
         </div>
         <CollaborationPlugin
