@@ -1,101 +1,12 @@
-import { createHeadlessEditor } from "@lexical/headless";
-import {
-  createBinding,
-  syncLexicalUpdateToYjs,
-  syncYjsChangesToLexical,
-} from "@lexical/yjs";
-import type { LexicalEditor, SerializedEditorState } from "lexical";
+import { syncLexicalUpdateToYjs } from "@lexical/yjs";
+import type { SerializedEditorState } from "lexical";
 import * as Y from "yjs";
-import { editorNodes } from "./editor_nodes";
+import commands from "./sidecar/commands";
+import { loadEditor } from "./sidecar/editor";
+import { uint8ArrayToBase64 } from "./sidecar/encoding";
+import queries from "./sidecar/queries";
 
-// --- No-op provider (satisfies the binding interface without network) ---
-
-function createNoopProvider() {
-  return {
-    awareness: {
-      getLocalState: () => null,
-      getStates: () => new Map(),
-      setLocalState: () => {},
-      setLocalStateField: () => {},
-      on: () => {},
-      off: () => {},
-    },
-    connect: () => {},
-    disconnect: () => {},
-    on: () => {},
-    off: () => {},
-  };
-}
-
-// --- Headless editor with Yjs binding ---
-
-function loadEditor(stateBase64: string) {
-  const stateBytes = base64ToUint8Array(stateBase64);
-
-  const doc = new Y.Doc();
-
-  // Collect errors from Lexical rather than throwing, which would crash
-  // the sidecar process. Callers check editorErrors after operations.
-  const editorErrors: Error[] = [];
-  const editor = createHeadlessEditor({
-    namespace: "sidecar",
-    nodes: editorNodes,
-    onError: (error: Error) => {
-      editorErrors.push(error);
-    },
-  });
-
-  const docMap = new Map([["root", doc]]);
-  const provider = createNoopProvider();
-  const binding = createBinding(editor, provider, "root", doc, docMap);
-
-  // Wire Yjs -> Lexical sync via observer (same as CollaborationPlugin)
-  binding.root
-    .getSharedType()
-    .observeDeep(
-      (events: Y.YEvent<Y.XmlText>[], transaction: Y.Transaction) => {
-        if (transaction.origin !== binding) {
-          syncYjsChangesToLexical(binding, provider, events, false);
-        }
-      },
-    );
-
-  // Apply the Yjs state — triggers the observer which syncs to Lexical
-  Y.applyUpdate(doc, stateBytes);
-
-  // Finalise the Lexical editor state
-  editor.update(() => {}, { discrete: true });
-
-  return { editor, doc, binding, provider, editorErrors };
-}
-
-// --- Command handlers (mutate the document, return Yjs update + data) ---
-
-const commands: Record<
-  string,
-  (editor: LexicalEditor, data: SerializedEditorState) => void
-> = {
-  apply_document(editor, data) {
-    const newState = editor.parseEditorState(data);
-    if (newState.isEmpty()) {
-      throw new Error("parseEditorState failed: produced an empty editor state");
-    }
-    editor.setEditorState(newState);
-  },
-};
-
-// --- Query handlers (read-only, return data) ---
-
-const queries: Record<
-  string,
-  (editor: LexicalEditor) => SerializedEditorState
-> = {
-  read_document(editor) {
-    return editor.getEditorState().toJSON();
-  },
-};
-
-// --- Core pipeline ---
+// --- Types ---
 
 interface CommandRequest {
   command: string;
@@ -107,6 +18,8 @@ type CommandResponse =
   | { ok: true; type: "command"; update: string; data: SerializedEditorState }
   | { ok: true; type: "query"; data: SerializedEditorState }
   | { ok: false; error: string };
+
+// --- Request routing ---
 
 function processCommand(request: CommandRequest): CommandResponse {
   const { command, state: stateBase64, data } = request;
@@ -241,22 +154,3 @@ process.stdin.on("end", () => {
 process.stdin.on("error", () => {
   process.exit(1);
 });
-
-// --- Base64 helpers ---
-
-function uint8ArrayToBase64(bytes: Uint8Array): string {
-  let binary = "";
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
-
-function base64ToUint8Array(base64: string): Uint8Array {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
-}
