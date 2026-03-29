@@ -132,14 +132,8 @@ The agent and DocServer are decoupled. The agent calls `DocServer.execute_comman
 
 ## Next Steps
 
-### Agent
-
-- [ ] Wrap AI-authored content in change nodes (ChangeInsertNode/ChangeDeleteNode) so users can review and accept/reject AI edits before they become permanent
-- [ ] Validate Lexical JSON from Claude — return errors to Claude for self-correction via the tool loop
-
 ### Chat UI
 
-- [ ] Ctrl+Enter to submit the chat input
 - [ ] Ability to start a new conversation
 - [ ] Ability to go back in the conversation to a previous message (branching)
 - [ ] AI chat outside the context of a document (e.g. organisation-level sidebar)
