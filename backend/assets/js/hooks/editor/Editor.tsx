@@ -10,7 +10,9 @@ import {
   contextMenuExtension,
   createExtension,
   defaultLexKitTheme,
+  draggableBlockExtension,
   historyExtension,
+  horizontalRuleExtension,
   italicExtension,
   linkExtension,
   listExtension,
@@ -40,6 +42,8 @@ const extensions = [
   blockFormatExtension,
   historyExtension,
   linkExtension,
+  horizontalRuleExtension,
+  draggableBlockExtension.configure({ offsetLeft: -22 }),
   contextMenuExtension,
   tableExtension.configure({
     enableContextMenu: true,

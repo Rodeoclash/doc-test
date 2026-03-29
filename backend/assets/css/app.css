@@ -91,6 +91,17 @@ body { font-family: sans-serif; }
 .lexkit-table-cell { border: 1px solid #d1d5db; padding: 0.5rem; min-width: 4rem; text-align: left; }
 .lexkit-table-cell-header { background-color: #f3f4f6; font-weight: 600; text-align: left; }
 
+/* Draggable block handles — positioning is handled by LexKit inline styles */
+.lexkit-draggable-handle {
+  border-radius: 0.25rem;
+  color: #9ca3af;
+}
+.lexkit-draggable-handle:hover,
+.lexkit-draggable-handle-hover {
+  color: #6b7280;
+  background-color: #f3f4f6;
+}
+
 /* Context menu */
 .lexkit-context-menu {
   background-color: white;

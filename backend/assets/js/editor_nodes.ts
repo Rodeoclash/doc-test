@@ -1,5 +1,6 @@
 import { AutoLinkNode, LinkNode } from "@lexical/link";
 import { ListItemNode, ListNode } from "@lexical/list";
+import { HorizontalRuleNode } from "@lexical/react/LexicalHorizontalRuleNode";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
 import type { Klass, LexicalNode } from "lexical";
@@ -18,6 +19,7 @@ export const editorNodes: Klass<LexicalNode>[] = [
   ListItemNode,
   LinkNode,
   AutoLinkNode,
+  HorizontalRuleNode,
   TableNode,
   TableRowNode,
   TableCellNode,
@@ -90,6 +92,14 @@ Combine values by adding them (e.g. bold + italic = 3, bold + underline = 9).
 
 \`\`\`json
 { "type": "text", "text": "Hello world", "format": 0, "detail": 0, "mode": "normal", "style": "", "version": 1 }
+\`\`\`
+
+### Horizontal Rule
+
+A horizontal divider line. This is a leaf node with no children.
+
+\`\`\`json
+{ "type": "horizontalrule", "version": 1 }
 \`\`\`
 
 ### Table

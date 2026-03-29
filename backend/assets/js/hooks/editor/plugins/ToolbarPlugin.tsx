@@ -7,6 +7,7 @@ import {
   Italic,
   List,
   ListOrdered,
+  Minus,
   Strikethrough,
   Table,
   Underline,
@@ -130,6 +131,15 @@ export function ToolbarPlugin() {
         }
       >
         <Table size={iconSize} />
+      </ToolbarButton>
+
+      <Divider />
+
+      <ToolbarButton
+        title="Horizontal rule"
+        onClick={() => commands.insertHorizontalRule()}
+      >
+        <Minus size={iconSize} />
       </ToolbarButton>
     </div>
   );
