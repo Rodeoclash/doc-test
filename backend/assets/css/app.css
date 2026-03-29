@@ -91,14 +91,36 @@ body { font-family: sans-serif; }
 .lexkit-table-cell { border: 1px solid #d1d5db; padding: 0.5rem; min-width: 4rem; text-align: left; }
 .lexkit-table-cell-header { background-color: #f3f4f6; font-weight: 600; text-align: left; }
 
-/* Table cell selection highlighting */
-.lexkit-table-cell-selected {
-  background-color: #e0edff;
-  caret-color: transparent;
+/* Context menu */
+.lexkit-context-menu {
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  padding: 0.25rem 0;
+  min-width: 10rem;
+  z-index: 50;
 }
-.lexkit-table-selection ::selection {
+.lexkit-context-menu-item {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+  color: #374151;
+}
+.lexkit-context-menu-item:hover {
+  background-color: #f3f4f6;
+}
+.lexkit-context-menu-item-disabled {
+  color: #9ca3af;
+  cursor: default;
+}
+.lexkit-context-menu-item-disabled:hover {
   background-color: transparent;
 }
+
 
 /* Resizable sidebar panel. Width is set via --sidebar-width CSS variable,
    which is populated from localStorage by an inline script in the layout

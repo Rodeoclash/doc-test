@@ -1,18 +1,14 @@
 import { useBaseEditor } from "@lexkit/editor";
 import {
   Bold,
-  Columns3,
   Heading1,
   Heading2,
   Heading3,
   Italic,
   List,
   ListOrdered,
-  Minus,
-  Rows3,
   Strikethrough,
   Table,
-  Trash2,
   Underline,
 } from "lucide-react";
 
@@ -52,8 +48,6 @@ const iconSize = 16;
 
 export function ToolbarPlugin() {
   const { commands, activeStates } = useBaseEditor();
-
-  const inTable = activeStates.isInTableCell;
 
   return (
     <div className="bg-white border border-gray-200 rounded-t-lg sticky top-0 z-10 px-2 py-1.5 flex items-center gap-0.5 flex-wrap">
@@ -137,36 +131,6 @@ export function ToolbarPlugin() {
       >
         <Table size={iconSize} />
       </ToolbarButton>
-
-      {inTable && (
-        <>
-          <Divider />
-          <ToolbarButton
-            title="Insert row"
-            onClick={() => commands.insertRowBelow()}
-          >
-            <Rows3 size={iconSize} />
-          </ToolbarButton>
-          <ToolbarButton
-            title="Insert column"
-            onClick={() => commands.insertColumnRight()}
-          >
-            <Columns3 size={iconSize} />
-          </ToolbarButton>
-          <ToolbarButton
-            title="Delete row"
-            onClick={() => commands.deleteRow()}
-          >
-            <Minus size={iconSize} />
-          </ToolbarButton>
-          <ToolbarButton
-            title="Delete table"
-            onClick={() => commands.deleteTable()}
-          >
-            <Trash2 size={iconSize} />
-          </ToolbarButton>
-        </>
-      )}
     </div>
   );
 }

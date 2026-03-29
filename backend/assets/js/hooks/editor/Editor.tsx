@@ -7,13 +7,13 @@ import {
   BaseProvider,
   blockFormatExtension,
   boldExtension,
+  contextMenuExtension,
   createExtension,
   defaultLexKitTheme,
   historyExtension,
   italicExtension,
   linkExtension,
   listExtension,
-  mergeThemes,
   RichText,
   strikethroughExtension,
   tableExtension,
@@ -40,7 +40,11 @@ const extensions = [
   blockFormatExtension,
   historyExtension,
   linkExtension,
-  tableExtension,
+  contextMenuExtension,
+  tableExtension.configure({
+    enableContextMenu: true,
+    contextMenuExtension,
+  }),
   changeNodeExtension,
 ] as const;
 
@@ -54,10 +58,7 @@ export default function Editor({ channel, username }: EditorProps) {
     <BaseProvider
       extensions={extensions}
       config={{
-        theme: mergeThemes(defaultLexKitTheme, {
-          tableCellSelected: "lexkit-table-cell-selected",
-          tableSelection: "lexkit-table-selection",
-        }),
+        theme: defaultLexKitTheme,
       }}
     >
       <LexicalCollaboration>
