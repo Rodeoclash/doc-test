@@ -69,8 +69,52 @@ defmodule Backend.Anthropic.Tools.EditDocumentTest do
       assert data |> get_in(["root", "children"]) |> length() > 0
     end
 
+    test "returns error for unknown node type" do
+      document = insert(:document)
+
+      invalid_state = %{
+        "root" => %{
+          "children" => [
+            %{
+              "type" => "nonexistent_node",
+              "direction" => "ltr",
+              "format" => "",
+              "indent" => 0,
+              "version" => 1,
+              "children" => []
+            }
+          ],
+          "direction" => "ltr",
+          "format" => "",
+          "indent" => 0,
+          "type" => "root",
+          "version" => 1
+        }
+      }
+
+      assert {:error, reason} =
+               EditDocument.execute(%{
+                 "document_id" => document.id,
+                 "document" => invalid_state
+               })
+
+      assert reason =~ "nonexistent_node"
+    end
+
+    test "returns error for invalid JSON structure" do
+      document = insert(:document)
+
+      assert {:error, reason} =
+               EditDocument.execute(%{
+                 "document_id" => document.id,
+                 "document" => %{"not_a_valid" => "editor_state"}
+               })
+
+      assert reason =~ "parseEditorState failed"
+    end
+
     test "returns error for a non-existent document" do
-      assert {:error, _} =
+      assert {:error, :document_not_found} =
                EditDocument.execute(%{
                  "document_id" => 0,
                  "document" => @sample_state

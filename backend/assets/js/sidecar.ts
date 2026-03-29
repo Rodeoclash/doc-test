@@ -34,11 +34,14 @@ function loadEditor(stateBase64: string) {
 
   const doc = new Y.Doc();
 
+  // Collect errors from Lexical rather than throwing, which would crash
+  // the sidecar process. Callers check editorErrors after operations.
+  const editorErrors: Error[] = [];
   const editor = createHeadlessEditor({
     namespace: "sidecar",
     nodes: editorNodes,
     onError: (error: Error) => {
-      throw error;
+      editorErrors.push(error);
     },
   });
 
@@ -63,7 +66,7 @@ function loadEditor(stateBase64: string) {
   // Finalise the Lexical editor state
   editor.update(() => {}, { discrete: true });
 
-  return { editor, doc, binding, provider };
+  return { editor, doc, binding, provider, editorErrors };
 }
 
 // --- Command handlers (mutate the document, return Yjs update + data) ---
@@ -74,6 +77,9 @@ const commands: Record<
 > = {
   apply_document(editor, data) {
     const newState = editor.parseEditorState(data);
+    if (newState.isEmpty()) {
+      throw new Error("parseEditorState failed: produced an empty editor state");
+    }
     editor.setEditorState(newState);
   },
 };
@@ -107,14 +113,21 @@ function processCommand(request: CommandRequest): CommandResponse {
 
   const queryHandler = queries[command];
   if (queryHandler) {
-    const { editor } = loadEditor(stateBase64);
+    const { editor, editorErrors } = loadEditor(stateBase64);
+    if (editorErrors.length > 0) {
+      return {
+        ok: false,
+        error: editorErrors.map((e) => e.message).join("; "),
+      };
+    }
     const result = queryHandler(editor);
     return { ok: true, type: "query", data: result };
   }
 
   const commandHandler = commands[command];
   if (commandHandler) {
-    const { editor, doc, binding, provider } = loadEditor(stateBase64);
+    const { editor, doc, binding, provider, editorErrors } =
+      loadEditor(stateBase64);
 
     // Capture Yjs updates produced by the edit
     const updates: Uint8Array[] = [];
@@ -149,7 +162,23 @@ function processCommand(request: CommandRequest): CommandResponse {
     );
 
     // Execute the edit
-    commandHandler(editor, data);
+    try {
+      commandHandler(editor, data);
+    } catch (e) {
+      // Combine async errors (from onError) with the thrown error.
+      // The onError errors are typically more specific (e.g. "type X not found")
+      // while the thrown error is a downstream consequence (e.g. "state is empty").
+      const messages = editorErrors.map((err) => err.message);
+      if (e instanceof Error) messages.push(e.message);
+      return { ok: false, error: messages.join("; ") };
+    }
+
+    if (editorErrors.length > 0) {
+      return {
+        ok: false,
+        error: editorErrors.map((e) => e.message).join("; "),
+      };
+    }
 
     // Clean up
     removeUpdateListener();
