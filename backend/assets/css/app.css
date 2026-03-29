@@ -87,6 +87,19 @@ body { font-family: sans-serif; }
 .lexkit-link { color: #2563eb; text-decoration: underline; }
 .lexkit-paragraph { margin: 0.5em 0; }
 .lexkit-hr { border: none; border-top: 2px solid #e5e7eb; margin: 1.5em 0; }
+.lexkit-table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+.lexkit-table-row {}
+.lexkit-table-cell { border: 1px solid #d1d5db; padding: 0.5rem; min-width: 4rem; text-align: left; }
+.lexkit-table-cell-header { background-color: #f3f4f6; font-weight: 600; text-align: left; }
+
+/* Table cell selection highlighting */
+.lexkit-table-cell-selected {
+  background-color: #e0edff;
+  caret-color: transparent;
+}
+.lexkit-table-selection ::selection {
+  background-color: transparent;
+}
 
 /* Resizable sidebar panel. Width is set via --sidebar-width CSS variable,
    which is populated from localStorage by an inline script in the layout
