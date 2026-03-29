@@ -67,6 +67,27 @@
 
 body { font-family: sans-serif; }
 
+/* LexKit editor theme styles */
+.lexkit-text-bold { font-weight: bold; }
+.lexkit-text-italic { font-style: italic; }
+.lexkit-text-underline { text-decoration: underline; }
+.lexkit-text-strikethrough { text-decoration: line-through; }
+.lexkit-text-code { font-family: monospace; background-color: #f3f4f6; padding: 1px 4px; border-radius: 2px; font-size: 0.9em; }
+.lexkit-heading-h1 { font-size: 2em; font-weight: bold; margin: 0.67em 0; }
+.lexkit-heading-h2 { font-size: 1.5em; font-weight: bold; margin: 0.83em 0; }
+.lexkit-heading-h3 { font-size: 1.17em; font-weight: bold; margin: 1em 0; }
+.lexkit-heading-h4 { font-size: 1em; font-weight: bold; margin: 1.33em 0; }
+.lexkit-heading-h5 { font-size: 0.83em; font-weight: bold; margin: 1.67em 0; }
+.lexkit-heading-h6 { font-size: 0.67em; font-weight: bold; margin: 2.33em 0; }
+.lexkit-quote { border-left: 4px solid #d1d5db; padding-left: 1rem; color: #6b7280; margin: 1em 0; }
+.lexkit-list-ol { list-style-type: decimal; padding-left: 1.5rem; }
+.lexkit-list-ul { list-style-type: disc; padding-left: 1.5rem; }
+.lexkit-list-li { margin: 0.25rem 0; }
+.lexkit-list-nested-item { list-style-type: none; }
+.lexkit-link { color: #2563eb; text-decoration: underline; }
+.lexkit-paragraph { margin: 0.5em 0; }
+.lexkit-hr { border: none; border-top: 2px solid #e5e7eb; margin: 1.5em 0; }
+
 /* Resizable sidebar panel. Width is set via --sidebar-width CSS variable,
    which is populated from localStorage by an inline script in the layout
    to avoid a flash of wrong layout on page load. */

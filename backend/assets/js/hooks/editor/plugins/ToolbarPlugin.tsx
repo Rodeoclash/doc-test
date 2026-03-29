@@ -4,6 +4,13 @@ import {
 } from "@lexical/list";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
+  $createHeadingNode,
+  $isHeadingNode,
+  type HeadingTagType,
+} from "@lexical/rich-text";
+import { $setBlocksType } from "@lexical/selection";
+import {
+  $createParagraphNode,
   $getSelection,
   $isRangeSelection,
   FORMAT_TEXT_COMMAND,
@@ -11,14 +18,18 @@ import {
 } from "lexical";
 import { useCallback, useEffect, useState } from "react";
 
-type FormatState = {
+type BlockType = "paragraph" | HeadingTagType;
+
+type ToolbarState = {
   bold: boolean;
   italic: boolean;
+  blockType: BlockType;
 };
 
-const emptyState: FormatState = {
+const emptyState: ToolbarState = {
   bold: false,
   italic: false,
+  blockType: "paragraph",
 };
 
 function ToolbarButton({
@@ -55,20 +66,29 @@ function Divider() {
 
 export function ToolbarPlugin() {
   const [editor] = useLexicalComposerContext();
-  const [formatState, setFormatState] = useState<FormatState>(emptyState);
+  const [state, setState] = useState<ToolbarState>(emptyState);
 
   useEffect(() => {
     return editor.registerUpdateListener(({ editorState }) => {
       editorState.read(() => {
         const selection = $getSelection();
         if (!$isRangeSelection(selection)) {
-          setFormatState(emptyState);
+          setState(emptyState);
           return;
         }
 
-        setFormatState({
+        // Detect block type from the anchor node's nearest block parent
+        let blockType: BlockType = "paragraph";
+        const anchorNode = selection.anchor.getNode();
+        const parent = anchorNode.getTopLevelElement();
+        if (parent && $isHeadingNode(parent)) {
+          blockType = parent.getTag();
+        }
+
+        setState({
           bold: selection.hasFormat("bold"),
           italic: selection.hasFormat("italic"),
+          blockType,
         });
       });
     });
@@ -81,21 +101,62 @@ export function ToolbarPlugin() {
     [editor],
   );
 
+  const toggleHeading = useCallback(
+    (tag: HeadingTagType) => {
+      editor.update(() => {
+        const selection = $getSelection();
+        if (!$isRangeSelection(selection)) return;
+
+        // Toggle: if already this heading, revert to paragraph
+        if (state.blockType === tag) {
+          $setBlocksType(selection, () => $createParagraphNode());
+        } else {
+          $setBlocksType(selection, () => $createHeadingNode(tag));
+        }
+      });
+    },
+    [editor, state.blockType],
+  );
+
   return (
     <div className="flex items-center gap-0.5 px-2 py-1.5">
       <ToolbarButton
         title="Bold"
-        active={formatState.bold}
+        active={state.bold}
         onClick={() => formatText("bold")}
       >
         <BoldIcon />
       </ToolbarButton>
       <ToolbarButton
         title="Italic"
-        active={formatState.italic}
+        active={state.italic}
         onClick={() => formatText("italic")}
       >
         <ItalicIcon />
+      </ToolbarButton>
+
+      <Divider />
+
+      <ToolbarButton
+        title="Heading 1"
+        active={state.blockType === "h1"}
+        onClick={() => toggleHeading("h1")}
+      >
+        <span className="text-xs font-bold">H1</span>
+      </ToolbarButton>
+      <ToolbarButton
+        title="Heading 2"
+        active={state.blockType === "h2"}
+        onClick={() => toggleHeading("h2")}
+      >
+        <span className="text-xs font-bold">H2</span>
+      </ToolbarButton>
+      <ToolbarButton
+        title="Heading 3"
+        active={state.blockType === "h3"}
+        onClick={() => toggleHeading("h3")}
+      >
+        <span className="text-xs font-bold">H3</span>
       </ToolbarButton>
 
       <Divider />
