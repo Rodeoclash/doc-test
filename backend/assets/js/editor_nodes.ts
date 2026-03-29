@@ -1,6 +1,7 @@
-import { LinkNode } from "@lexical/link";
+import { AutoLinkNode, LinkNode } from "@lexical/link";
 import { ListItemNode, ListNode } from "@lexical/list";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
+import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
 import type { Klass, LexicalNode } from "lexical";
 
 import { ChangeNode } from "./hooks/editor/nodes/change";
@@ -16,6 +17,10 @@ export const editorNodes: Klass<LexicalNode>[] = [
   ListNode,
   ListItemNode,
   LinkNode,
+  AutoLinkNode,
+  TableNode,
+  TableRowNode,
+  TableCellNode,
   ChangeNode,
 ];
 
@@ -86,6 +91,37 @@ Combine values by adding them (e.g. bold + italic = 3, bold + underline = 9).
 \`\`\`json
 { "type": "text", "text": "Hello world", "format": 0, "detail": 0, "mode": "normal", "style": "", "version": 1 }
 \`\`\`
+
+### Table
+
+Tables consist of three node types: table, tablerow, and tablecell. Cells can optionally be headers.
+
+\`\`\`json
+{
+  "type": "table",
+  "version": 1,
+  "children": [
+    {
+      "type": "tablerow",
+      "version": 1,
+      "children": [
+        { "type": "tablecell", "headerState": 1, "colSpan": 1, "version": 1, "children": [...paragraph nodes] },
+        { "type": "tablecell", "headerState": 1, "colSpan": 1, "version": 1, "children": [...paragraph nodes] }
+      ]
+    },
+    {
+      "type": "tablerow",
+      "version": 1,
+      "children": [
+        { "type": "tablecell", "headerState": 0, "colSpan": 1, "version": 1, "children": [...paragraph nodes] },
+        { "type": "tablecell", "headerState": 0, "colSpan": 1, "version": 1, "children": [...paragraph nodes] }
+      ]
+    }
+  ]
+}
+\`\`\`
+
+headerState: 0 = normal cell, 1 = row header, 2 = column header, 3 = both.
 
 ### Change Node
 
