@@ -5,6 +5,7 @@
     "@lexical/react": "^0.42.0",
     "@lexkit/editor": "^0.0.38",
     "lexical": "^0.42.0",
+    "lucide-react": "^1.7.0",
     "phoenix": "../deps/phoenix",
     "phoenix_html": "../deps/phoenix_html",
     "phoenix_live_view": "../deps/phoenix_live_view",
