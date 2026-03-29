@@ -6,6 +6,16 @@ defmodule Backend.Anthropic.Tools.ReadDocumentTest do
   alias Backend.Anthropic.Tools.EditDocument
   alias Backend.Anthropic.Tools.ReadDocument
 
+  setup do
+    on_exit(fn ->
+      Backend.DocSupervisor
+      |> DynamicSupervisor.which_children()
+      |> Enum.each(fn {_, pid, _, _} ->
+        DynamicSupervisor.terminate_child(Backend.DocSupervisor, pid)
+      end)
+    end)
+  end
+
   describe "definition/0" do
     test "returns a valid tool definition" do
       defn = ReadDocument.definition()

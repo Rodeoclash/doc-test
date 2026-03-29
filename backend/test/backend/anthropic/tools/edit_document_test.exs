@@ -5,6 +5,16 @@ defmodule Backend.Anthropic.Tools.EditDocumentTest do
 
   alias Backend.Anthropic.Tools.EditDocument
 
+  setup do
+    on_exit(fn ->
+      Backend.DocSupervisor
+      |> DynamicSupervisor.which_children()
+      |> Enum.each(fn {_, pid, _, _} ->
+        DynamicSupervisor.terminate_child(Backend.DocSupervisor, pid)
+      end)
+    end)
+  end
+
   @sample_state %{
     "root" => %{
       "children" => [
