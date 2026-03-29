@@ -1,8 +1,4 @@
 <aside class="border-l border-gray-200 h-dvh flex flex-col">
-  <div class="p-4 border-b border-gray-200 font-bold text-sm">
-    AI assistant
-  </div>
-
   <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3" phx-hook="ScrollToBottom">
     <div
       :if={@conversation.messages == [] && !@loading}
