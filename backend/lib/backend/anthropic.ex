@@ -8,7 +8,7 @@ defmodule Backend.Anthropic do
   @api_url "https://api.anthropic.com/v1/messages"
   @api_version "2023-06-01"
   @default_model "claude-sonnet-4-6"
-  @default_max_tokens 4096
+  @default_max_tokens 16_384
   @max_iterations 10
 
   @doc """
@@ -81,6 +81,9 @@ defmodule Backend.Anthropic do
         tool_message = %{role: "user", content: tool_results}
         updated_messages = messages ++ [assistant_message, tool_message]
         do_run(updated_messages, tools, opts, iteration + 1)
+
+      {:ok, %{stop_reason: "max_tokens"}} ->
+        {:error, :max_tokens}
 
       {:error, _} = error ->
         error
