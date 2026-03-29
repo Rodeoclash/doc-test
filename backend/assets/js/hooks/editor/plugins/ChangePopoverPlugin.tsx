@@ -113,10 +113,20 @@ export function ChangePopoverPlugin() {
           return;
         }
 
-        // Virtual element whose bounding rect spans both change nodes
+        // Virtual element whose bounding rect tightly wraps the visible content
+        // inside the change nodes. We collect rects from all leaf children to
+        // avoid measuring the full-width block wrapper.
         referenceRef.current = {
           getBoundingClientRect() {
-            const rects = elements.map((el) => el.getBoundingClientRect());
+            const rects = elements.flatMap((el) => {
+              const children = el.querySelectorAll("*");
+              // Use the deepest children that have content, or the element itself
+              const leaves = Array.from(children).filter(
+                (child) => child.children.length === 0,
+              );
+              const targets = leaves.length > 0 ? leaves : [el];
+              return targets.map((t) => t.getBoundingClientRect());
+            });
             const top = Math.min(...rects.map((r) => r.top));
             const left = Math.min(...rects.map((r) => r.left));
             const bottom = Math.max(...rects.map((r) => r.bottom));
