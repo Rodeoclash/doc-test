@@ -113,6 +113,80 @@ defmodule Backend.Anthropic.Tools.EditDocumentTest do
       assert reason =~ "parseEditorState failed"
     end
 
+    test "returns error for empty document children" do
+      document = insert(:document)
+
+      assert {:error, reason} =
+               EditDocument.execute(%{
+                 "document_id" => document.id,
+                 "document" => %{
+                   "root" => %{
+                     "children" => [],
+                     "direction" => "ltr",
+                     "format" => "",
+                     "indent" => 0,
+                     "type" => "root",
+                     "version" => 1
+                   }
+                 }
+               })
+
+      assert reason =~ "parseEditorState failed"
+    end
+
+    test "returns error for nil document" do
+      document = insert(:document)
+
+      assert {:error, reason} =
+               EditDocument.execute(%{
+                 "document_id" => document.id,
+                 "document" => nil
+               })
+
+      assert reason =~ "parseEditorState failed"
+    end
+
+    test "returns error for wrong node nesting" do
+      document = insert(:document)
+
+      assert {:error, reason} =
+               EditDocument.execute(%{
+                 "document_id" => document.id,
+                 "document" => %{
+                   "root" => %{
+                     "children" => [
+                       %{
+                         "type" => "listitem",
+                         "value" => 1,
+                         "direction" => "ltr",
+                         "format" => "",
+                         "indent" => 0,
+                         "version" => 1,
+                         "children" => [
+                           %{
+                             "type" => "text",
+                             "text" => "orphan item",
+                             "format" => 0,
+                             "detail" => 0,
+                             "mode" => "normal",
+                             "style" => "",
+                             "version" => 1
+                           }
+                         ]
+                       }
+                     ],
+                     "direction" => "ltr",
+                     "format" => "",
+                     "indent" => 0,
+                     "type" => "root",
+                     "version" => 1
+                   }
+                 }
+               })
+
+      assert is_binary(reason)
+    end
+
     test "returns error for a non-existent document" do
       assert {:error, :document_not_found} =
                EditDocument.execute(%{
